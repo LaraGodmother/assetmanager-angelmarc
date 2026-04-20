@@ -5,14 +5,28 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { api, type ApiOrder, type ApiBudget, type ApiAppointment, type ApiService } from "@/lib/api";
+import {
+  api,
+  type ApiOrder,
+  type ApiBudget,
+  type ApiAppointment,
+  type ApiService,
+} from "@/lib/api";
 
-// ─── Status types (mapped from API English → app Portuguese display) ──────────
-export type ServiceStatus = "pendente" | "em_andamento" | "concluido" | "cancelado";
+// ─── TYPES ─────────────────────────────────────────────────────────────
+export type ServiceStatus =
+  | "pendente"
+  | "em_andamento"
+  | "concluido"
+  | "cancelado";
+
 export type BudgetStatus = "aguardando" | "aprovado" | "recusado";
-export type AppointmentStatus = "agendado" | "confirmado" | "cancelado" | "realizado";
+export type AppointmentStatus =
+  | "agendado"
+  | "confirmado"
+  | "cancelado"
+  | "realizado";
 
-// ─── App-level model types ────────────────────────────────────────────────────
 export interface ServiceOrder {
   id: string;
   clientId: string;
@@ -25,6 +39,9 @@ export interface ServiceOrder {
   preferredTime: string;
   createdAt: string;
   updatedAt: string;
+  price?: number;
+  cost?: number;
+  profit?: number;
 }
 
 export interface Budget {
@@ -63,29 +80,33 @@ export interface Service {
   active: boolean;
 }
 
-// ─── Mapping helpers ──────────────────────────────────────────────────────────
+// ─── STATUS MAPS ──────────────────────────────────────────────────────
 const ORDER_STATUS_MAP: Record<ApiOrder["status"], ServiceStatus> = {
   pending: "pendente",
   in_progress: "em_andamento",
   done: "concluido",
   cancelled: "cancelado",
 };
+
 const ORDER_STATUS_REVERSE: Record<ServiceStatus, ApiOrder["status"]> = {
   pendente: "pending",
   em_andamento: "in_progress",
   concluido: "done",
   cancelado: "cancelled",
 };
+
 const BUDGET_STATUS_MAP: Record<ApiBudget["status"], BudgetStatus> = {
   pending: "aguardando",
   approved: "aprovado",
   rejected: "recusado",
 };
+
 const BUDGET_STATUS_REVERSE: Record<BudgetStatus, ApiBudget["status"]> = {
   aguardando: "pending",
   aprovado: "approved",
   recusado: "rejected",
 };
+
 const APPT_STATUS_MAP: Record<ApiAppointment["status"], AppointmentStatus> = {
   scheduled: "agendado",
   confirmed: "confirmado",
@@ -93,7 +114,17 @@ const APPT_STATUS_MAP: Record<ApiAppointment["status"], AppointmentStatus> = {
   done: "realizado",
 };
 
+const APPT_STATUS_REVERSE: Record<AppointmentStatus, ApiAppointment["status"]> = {
+  agendado: "scheduled",
+  confirmado: "confirmed",
+  cancelado: "cancelled",
+  realizado: "done",
+};
+
+// ─── MAPPERS ───────────────────────────────────────────────────────────
 function mapOrder(o: ApiOrder): ServiceOrder {
+  const price = (o as any).price ? Number((o as any).price) : 0;
+  const cost = (o as any).cost ? Number((o as any).cost) : 0;
   return {
     id: String(o.id),
     clientId: String(o.clientId),
@@ -106,10 +137,16 @@ function mapOrder(o: ApiOrder): ServiceOrder {
     preferredTime: o.preferredTime ?? "",
     createdAt: o.createdAt,
     updatedAt: o.updatedAt,
+    price,
+    cost,
+    profit: price - cost,
   };
 }
 
 function mapBudget(b: ApiBudget): Budget {
+  const baseValue = Number(b.baseValue) || 0;
+  const profitMargin = Number(b.profitMargin) || 0;
+  const finalValue = Number(b.finalValue) || 0;
   return {
     id: String(b.id),
     clientId: String(b.clientId),
@@ -117,9 +154,9 @@ function mapBudget(b: ApiBudget): Budget {
     serviceType: b.serviceName ?? "Serviço",
     serviceId: String(b.serviceId),
     description: b.observations ?? "",
-    baseValue: Number(b.baseValue),
-    profitMargin: Number(b.profitMargin),
-    value: Number(b.finalValue),
+    baseValue,
+    profitMargin,
+    value: finalValue || baseValue + baseValue * (profitMargin / 100),
     observations: b.observations ?? undefined,
     status: BUDGET_STATUS_MAP[b.status] ?? "aguardando",
     createdAt: b.createdAt,
@@ -145,56 +182,57 @@ function mapService(s: ApiService): Service {
     id: String(s.id),
     name: s.name,
     description: s.description,
-    basePrice: Number(s.basePrice),
+    basePrice: Number(s.basePrice) || 0,
     rules: s.rules ?? undefined,
     active: s.active,
   };
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
+// ─── CONTEXT TYPE ─────────────────────────────────────────────────────
 interface DataContextType {
   serviceOrders: ServiceOrder[];
   budgets: Budget[];
   appointments: Appointment[];
   services: Service[];
   isLoading: boolean;
-  createServiceOrder: (data: {
-    clientId: string;
-    serviceId: string;
+
+  // Order operations
+  updateServiceOrderStatus: (id: string, status: ServiceStatus) => Promise<void>;
+  updateServiceOrderFinance: (id: string, price: number, cost: number) => Promise<void>;
+  createOrder: (data: {
+    clientId: number;
+    serviceId: number;
     description?: string;
     preferredDate?: string;
     preferredTime?: string;
-  }) => Promise<void>;
-  createBudgetRequest: (data: {
-    clientId: string;
-    serviceId: string;
+  }) => Promise<ServiceOrder>;
+
+  // Budget operations
+  updateBudgetStatus: (id: string, status: BudgetStatus) => Promise<void>;
+  createBudget: (data: {
+    clientId: number;
+    serviceId: number;
     baseValue: number;
     profitMargin?: number;
     observations?: string;
-  }) => Promise<void>;
-  updateServiceOrderStatus: (id: string, status: ServiceStatus) => Promise<void>;
-  updateBudgetStatus: (
-    id: string,
-    status: BudgetStatus,
-    value?: number,
-    notes?: string
-  ) => Promise<void>;
+  }) => Promise<Budget>;
+
+  // Appointment operations
+  updateAppointmentStatus: (id: string, status: AppointmentStatus) => Promise<void>;
+  createAppointment: (data: {
+    clientId: number;
+    serviceId: number;
+    date: string;
+    time: string;
+    notes?: string;
+  }) => Promise<Appointment>;
+
   refreshData: () => Promise<void>;
-  getClientOrders: (clientId: string) => ServiceOrder[];
-  getClientBudgets: (clientId: string) => Budget[];
-  getClientAppointments: (clientId: string) => Appointment[];
 }
 
 const DataContext = createContext<DataContextType | null>(null);
 
-export const SERVICE_TYPES = [
-  "Elétrica",
-  "CFTV / Câmeras",
-  "Refrigeração",
-  "Automação",
-  "Manutenção Geral",
-];
-
+// ─── PROVIDER ─────────────────────────────────────────────────────────
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -205,18 +243,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [ordersRaw, budgetsRaw, apptsRaw, svcsRaw] = await Promise.all([
-        api.getOrders().catch(() => [] as ApiOrder[]),
-        api.getBudgets().catch(() => [] as ApiBudget[]),
-        api.getAppointments().catch(() => [] as ApiAppointment[]),
-        api.getServices().catch(() => [] as ApiService[]),
+      const [ordersRaw, budgetsRaw, apptsRaw, servicesRaw] = await Promise.all([
+        api.getOrders().catch(() => []),
+        api.getBudgets().catch(() => []),
+        api.getAppointments().catch(() => []),
+        api.getServices().catch(() => []),
       ]);
       setServiceOrders(ordersRaw.map(mapOrder));
       setBudgets(budgetsRaw.map(mapBudget));
       setAppointments(apptsRaw.map(mapAppointment));
-      setServices(svcsRaw.map(mapService));
-    } catch (err) {
-      console.error("DataContext loadData error:", err);
+      setServices(servicesRaw.map(mapService));
     } finally {
       setIsLoading(false);
     }
@@ -226,46 +262,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     loadData();
   }, [loadData]);
 
-  const createServiceOrder = useCallback(
-    async (data: {
-      clientId: string;
-      serviceId: string;
-      description?: string;
-      preferredDate?: string;
-      preferredTime?: string;
-    }) => {
-      const order = await api.createOrder({
-        clientId: Number(data.clientId),
-        serviceId: Number(data.serviceId),
-        description: data.description,
-        preferredDate: data.preferredDate,
-        preferredTime: data.preferredTime,
-      });
-      setServiceOrders((prev) => [...prev, mapOrder(order)]);
-    },
-    []
-  );
-
-  const createBudgetRequest = useCallback(
-    async (data: {
-      clientId: string;
-      serviceId: string;
-      baseValue: number;
-      profitMargin?: number;
-      observations?: string;
-    }) => {
-      const budget = await api.createBudget({
-        clientId: Number(data.clientId),
-        serviceId: Number(data.serviceId),
-        baseValue: data.baseValue,
-        profitMargin: data.profitMargin ?? 0,
-        observations: data.observations,
-      });
-      setBudgets((prev) => [...prev, mapBudget(budget)]);
-    },
-    []
-  );
-
+  // ── Order operations ──────────────────────────────────────────────
   const updateServiceOrderStatus = useCallback(
     async (id: string, status: ServiceStatus) => {
       const updated = await api.updateOrder(Number(id), {
@@ -278,11 +275,38 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const updateServiceOrderFinance = useCallback(
+    async (id: string, price: number, cost: number) => {
+      const updated = await api.updateOrder(Number(id), { price, cost } as any);
+      setServiceOrders((prev) =>
+        prev.map((o) => (o.id === id ? mapOrder(updated) : o))
+      );
+    },
+    []
+  );
+
+  const createOrder = useCallback(
+    async (data: {
+      clientId: number;
+      serviceId: number;
+      description?: string;
+      preferredDate?: string;
+      preferredTime?: string;
+    }) => {
+      const created = await api.createOrder(data);
+      const mapped = mapOrder(created);
+      setServiceOrders((prev) => [mapped, ...prev]);
+      return mapped;
+    },
+    []
+  );
+
+  // ── Budget operations ─────────────────────────────────────────────
   const updateBudgetStatus = useCallback(
-    async (id: string, status: BudgetStatus, value?: number, notes?: string) => {
-      const payload: any = { status: BUDGET_STATUS_REVERSE[status] };
-      if (notes !== undefined) payload.observations = notes;
-      const updated = await api.updateBudget(Number(id), payload);
+    async (id: string, status: BudgetStatus) => {
+      const updated = await api.updateBudget(Number(id), {
+        status: BUDGET_STATUS_REVERSE[status],
+      });
       setBudgets((prev) =>
         prev.map((b) => (b.id === id ? mapBudget(updated) : b))
       );
@@ -290,24 +314,54 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const createBudget = useCallback(
+    async (data: {
+      clientId: number;
+      serviceId: number;
+      baseValue: number;
+      profitMargin?: number;
+      observations?: string;
+    }) => {
+      const created = await api.createBudget(data);
+      const mapped = mapBudget(created);
+      setBudgets((prev) => [mapped, ...prev]);
+      return mapped;
+    },
+    []
+  );
+
+  // ── Appointment operations ────────────────────────────────────────
+  const updateAppointmentStatus = useCallback(
+    async (id: string, status: AppointmentStatus) => {
+      const updated = await api.updateAppointment(Number(id), {
+        status: APPT_STATUS_REVERSE[status],
+      });
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === id ? mapAppointment(updated) : a))
+      );
+    },
+    []
+  );
+
+  const createAppointment = useCallback(
+    async (data: {
+      clientId: number;
+      serviceId: number;
+      date: string;
+      time: string;
+      notes?: string;
+    }) => {
+      const created = await api.createAppointment(data);
+      const mapped = mapAppointment(created);
+      setAppointments((prev) => [mapped, ...prev]);
+      return mapped;
+    },
+    []
+  );
+
   const refreshData = useCallback(async () => {
     await loadData();
   }, [loadData]);
-
-  const getClientOrders = useCallback(
-    (clientId: string) => serviceOrders.filter((o) => o.clientId === clientId),
-    [serviceOrders]
-  );
-
-  const getClientBudgets = useCallback(
-    (clientId: string) => budgets.filter((b) => b.clientId === clientId),
-    [budgets]
-  );
-
-  const getClientAppointments = useCallback(
-    (clientId: string) => appointments.filter((a) => a.clientId === clientId),
-    [appointments]
-  );
 
   return (
     <DataContext.Provider
@@ -317,14 +371,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         appointments,
         services,
         isLoading,
-        createServiceOrder,
-        createBudgetRequest,
         updateServiceOrderStatus,
+        updateServiceOrderFinance,
+        createOrder,
         updateBudgetStatus,
+        createBudget,
+        updateAppointmentStatus,
+        createAppointment,
         refreshData,
-        getClientOrders,
-        getClientBudgets,
-        getClientAppointments,
       }}
     >
       {children}
@@ -332,8 +386,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ─── HOOK ─────────────────────────────────────────────────────────────
 export function useData() {
   const ctx = useContext(DataContext);
-  if (!ctx) throw new Error("useData must be used inside DataProvider");
+  if (!ctx) {
+    throw new Error("useData must be used inside DataProvider");
+  }
   return ctx;
 }

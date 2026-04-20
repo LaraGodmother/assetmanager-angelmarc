@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  TextInput,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,7 +25,14 @@ const STATUS_OPTIONS: { label: string; value: ServiceStatus }[] = [
   { label: "Cancelado", value: "cancelado" },
 ];
 
-const FILTER_OPTIONS = ["Todos", "pendente", "em_andamento", "concluido", "cancelado"];
+const FILTER_OPTIONS = [
+  "Todos",
+  "pendente",
+  "em_andamento",
+  "concluido",
+  "cancelado",
+];
+
 const FILTER_LABELS: Record<string, string> = {
   Todos: "Todos",
   pendente: "Pendente",
@@ -43,13 +51,20 @@ export default function AdminOrdersScreen() {
   const [filter, setFilter] = useState("Todos");
   const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [price, setPrice] = useState("");
+  const [cost, setCost] = useState("");
 
   const filtered = serviceOrders
     .filter((o) => filter === "Todos" || o.status === filter)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
   function openOrder(order: ServiceOrder) {
     setSelectedOrder(order);
+    setPrice(String(order.price ?? ""));
+    setCost(String(order.cost ?? ""));
     setShowModal(true);
   }
 
@@ -62,6 +77,7 @@ export default function AdminOrdersScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* HEADER */}
       <View
         style={{
           paddingTop: topInset + 12,
@@ -78,6 +94,7 @@ export default function AdminOrdersScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Feather name="arrow-left" size={22} color={colors.primary} />
         </TouchableOpacity>
+
         <Text
           style={{
             fontSize: 18,
@@ -89,6 +106,7 @@ export default function AdminOrdersScreen() {
         >
           Ordens de Serviço
         </Text>
+
         <Text
           style={{
             fontSize: 12,
@@ -100,11 +118,15 @@ export default function AdminOrdersScreen() {
         </Text>
       </View>
 
-      {/* Filter */}
+      {/* FILTER */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          gap: 8,
+        }}
       >
         {FILTER_OPTIONS.map((opt) => (
           <TouchableOpacity
@@ -114,14 +136,16 @@ export default function AdminOrdersScreen() {
               paddingVertical: 6,
               paddingHorizontal: 14,
               borderRadius: 20,
-              backgroundColor: filter === opt ? colors.primary : colors.muted,
+              backgroundColor:
+                filter === opt ? colors.primary : colors.muted,
             }}
           >
             <Text
               style={{
                 fontSize: 12,
                 fontFamily: "Inter_500Medium",
-                color: filter === opt ? "#ffffff" : colors.mutedForeground,
+                color:
+                  filter === opt ? "#fff" : colors.mutedForeground,
               }}
             >
               {FILTER_LABELS[opt]}
@@ -130,13 +154,18 @@ export default function AdminOrdersScreen() {
         ))}
       </ScrollView>
 
+      {/* LIST */}
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
       >
         {filtered.length === 0 ? (
           <Card style={{ marginTop: 32, alignItems: "center", padding: 32 }}>
-            <Feather name="clipboard" size={36} color={colors.mutedForeground} />
+            <Feather
+              name="clipboard"
+              size={36}
+              color={colors.mutedForeground}
+            />
             <Text
               style={{
                 fontSize: 14,
@@ -151,12 +180,16 @@ export default function AdminOrdersScreen() {
           </Card>
         ) : (
           filtered.map((order) => (
-            <ServiceCard key={order.id} order={order} onPress={() => openOrder(order)} />
+            <ServiceCard
+              key={order.id}
+              order={order}
+              onPress={() => openOrder(order)}
+            />
           ))
         )}
       </ScrollView>
 
-      {/* Status Modal */}
+      {/* MODAL */}
       <Modal visible={showModal} transparent animationType="slide">
         <Pressable
           style={{
@@ -184,8 +217,9 @@ export default function AdminOrdersScreen() {
                 marginBottom: 6,
               }}
             >
-              {selectedOrder?.serviceType}
+              Serviço: {selectedOrder?.serviceType}
             </Text>
+
             <Text
               style={{
                 fontSize: 13,
@@ -194,9 +228,59 @@ export default function AdminOrdersScreen() {
                 marginBottom: 20,
               }}
             >
-              {selectedOrder?.clientName}
+              Cliente: {selectedOrder?.clientName}
             </Text>
 
+            {/* FINANCEIRO */}
+            <View
+              style={{
+                backgroundColor: colors.muted,
+                padding: 12,
+                borderRadius: 10,
+                marginBottom: 16,
+              }}
+            >
+              <Text style={{ color: colors.foreground, marginBottom: 6 }}>
+                💰 Preço
+              </Text>
+
+              <TextInput
+                value={price}
+                onChangeText={setPrice}
+                keyboardType="numeric"
+                style={{
+                  backgroundColor: colors.card,
+                  padding: 10,
+                  borderRadius: 8,
+                  marginBottom: 10,
+                  color: colors.foreground,
+                }}
+              />
+
+              <Text style={{ color: colors.foreground, marginBottom: 6 }}>
+                💸 Custo
+              </Text>
+
+              <TextInput
+                value={cost}
+                onChangeText={setCost}
+                keyboardType="numeric"
+                style={{
+                  backgroundColor: colors.card,
+                  padding: 10,
+                  borderRadius: 8,
+                  marginBottom: 10,
+                  color: colors.foreground,
+                }}
+              />
+
+              <Text style={{ color: colors.primary }}>
+                📈 Lucro: €
+                {(Number(price || 0) - Number(cost || 0)).toFixed(2)}
+              </Text>
+            </View>
+
+            {/* STATUS */}
             <Text
               style={{
                 fontSize: 14,
@@ -222,17 +306,11 @@ export default function AdminOrdersScreen() {
                       ? colors.accent
                       : colors.muted,
                   flexDirection: "row",
-                  alignItems: "center",
                   justifyContent: "space-between",
                 }}
               >
                 <Text
                   style={{
-                    fontSize: 15,
-                    fontFamily:
-                      selectedOrder?.status === opt.value
-                        ? "Inter_600SemiBold"
-                        : "Inter_400Regular",
                     color:
                       selectedOrder?.status === opt.value
                         ? colors.accentForeground
@@ -241,9 +319,14 @@ export default function AdminOrdersScreen() {
                 >
                   {opt.label}
                 </Text>
-                {selectedOrder?.status === opt.value ? (
-                  <Feather name="check" size={16} color={colors.primary} />
-                ) : null}
+
+                {selectedOrder?.status === opt.value && (
+                  <Feather
+                    name="check"
+                    size={16}
+                    color={colors.primary}
+                  />
+                )}
               </TouchableOpacity>
             ))}
           </View>

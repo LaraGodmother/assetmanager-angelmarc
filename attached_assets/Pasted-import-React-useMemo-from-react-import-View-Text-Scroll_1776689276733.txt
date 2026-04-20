@@ -1,0 +1,112 @@
+import React, { useMemo } from "react";
+import { View, Text, ScrollView } from "react-native";
+import { useColors } from "@/hooks/useColors";
+import { useData } from "@/context/DataContext";
+import { Card } from "@/components/ui/Card";
+
+export default function FinanceiroScreen() {
+  const colors = useColors();
+  const { serviceOrders } = useData();
+
+  const stats = useMemo(() => {
+    const totalOrders = serviceOrders.length;
+
+    const totalRevenue = serviceOrders.reduce(
+      (acc, o) => acc + (o.price || 0),
+      0
+    );
+
+    const totalCost = serviceOrders.reduce(
+      (acc, o) => acc + (o.cost || 0),
+      0
+    );
+
+    const totalProfit = totalRevenue - totalCost;
+
+    const pending = serviceOrders.filter(
+      (o) => o.status === "pendente"
+    ).length;
+
+    const done = serviceOrders.filter(
+      (o) => o.status === "concluido"
+    ).length;
+
+    return {
+      totalOrders,
+      totalRevenue,
+      totalCost,
+      totalProfit,
+      pending,
+      done,
+    };
+  }, [serviceOrders]);
+
+  return (
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={{ padding: 16, gap: 12 }}
+    >
+      <Text
+        style={{
+          fontSize: 22,
+          fontWeight: "700",
+          color: colors.foreground,
+          marginBottom: 10,
+        }}
+      >
+        💰 Financeiro
+      </Text>
+
+      <Card style={{ padding: 16 }}>
+        <Text style={{ color: colors.mutedForeground }}>
+          Faturamento total
+        </Text>
+        <Text style={{ fontSize: 20, fontWeight: "700", color: colors.foreground }}>
+          € {stats.totalRevenue.toFixed(2)}
+        </Text>
+      </Card>
+
+      <Card style={{ padding: 16 }}>
+        <Text style={{ color: colors.mutedForeground }}>
+          Custos totais
+        </Text>
+        <Text style={{ fontSize: 20, fontWeight: "700", color: colors.foreground }}>
+          € {stats.totalCost.toFixed(2)}
+        </Text>
+      </Card>
+
+      <Card style={{ padding: 16 }}>
+        <Text style={{ color: colors.mutedForeground }}>
+          Lucro total
+        </Text>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "700",
+            color: stats.totalProfit >= 0 ? "green" : "red",
+          }}
+        >
+          € {stats.totalProfit.toFixed(2)}
+        </Text>
+      </Card>
+
+      <Card style={{ padding: 16 }}>
+        <Text style={{ color: colors.foreground, fontWeight: "600" }}>
+          Resumo
+        </Text>
+
+        <Text style={{ color: colors.mutedForeground }}>
+          Total de ordens: {stats.totalOrders}
+        </Text>
+
+        <Text style={{ color: colors.mutedForeground }}>
+          Pendentes: {stats.pending}
+        </Text>
+
+        <Text style={{ color: colors.mutedForeground }}>
+          Concluídas: {stats.done}
+        </Text>
+      </Card>
+    </ScrollView>
+  );
+}

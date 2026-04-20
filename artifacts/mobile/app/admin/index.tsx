@@ -31,13 +31,14 @@ const ADMIN_MENU = [
   { icon: "file-text" as const, label: "Orçamentos", route: "/admin/budgets", color: "#6A1B9A" },
   { icon: "clipboard" as const, label: "Ordens", route: "/admin/orders", color: "#2E7D32" },
   { icon: "calendar" as const, label: "Calendário", route: "/admin/calendar", color: "#C62828" },
+  { icon: "dollar-sign" as const, label: "Financeiro", route: "/admin/financeiro", color: "#00796B" },
 ];
 
 export default function AdminDashboard() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
-  const { serviceOrders, budgets, appointments, refreshData, isLoading } = useData();
+  const { serviceOrders = [], budgets = [], appointments = [], refreshData, isLoading } = useData();
 
   const topInset = Platform.OS === "web" ? 67 : insets.top;
 
@@ -52,11 +53,11 @@ export default function AdminDashboard() {
   const approvedBudgets = budgets.filter((b) => b.status === "aprovado" && b.value);
   const totalRevenue = approvedBudgets.reduce((sum, b) => sum + (b.value ?? 0), 0);
 
-  const recentOrders = serviceOrders
+  const recentOrders = [...serviceOrders]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 3);
 
-  const recentBudgets = budgets
+  const recentBudgets = [...budgets]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 2);
 
