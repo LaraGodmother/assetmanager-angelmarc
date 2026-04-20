@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ServiçosPRO",
+    "name": "ServControl",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,16 +9,16 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1d4ed8"
+      "backgroundColor": "#1565C0"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.servicospro.app"
+      "bundleIdentifier": "com.servcontrol.app"
     },
     "android": {
-      "package": "com.servicospro.app"
+      "package": "com.servcontrol.app"
     },
     "web": {
       "favicon": "./assets/images/icon.png"

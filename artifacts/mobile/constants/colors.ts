@@ -1,7 +1,7 @@
 const colors = {
   light: {
     text: "#0f172a",
-    tint: "#1d4ed8",
+    tint: "#1565C0",
 
     background: "#f8fafc",
     foreground: "#0f172a",
@@ -9,17 +9,24 @@ const colors = {
     card: "#ffffff",
     cardForeground: "#0f172a",
 
-    primary: "#1d4ed8",
+    // Primary: deep blue matching the ServControl shield
+    primary: "#1565C0",
     primaryForeground: "#ffffff",
 
-    secondary: "#eff6ff",
-    secondaryForeground: "#1e40af",
+    // Secondary: bright sky blue (lighter shade from logo)
+    secondary: "#E3F2FD",
+    secondaryForeground: "#1565C0",
 
     muted: "#f1f5f9",
     mutedForeground: "#64748b",
 
-    accent: "#dbeafe",
-    accentForeground: "#1e40af",
+    // Accent: the orange from "Control" in the logo
+    accent: "#FFF3E0",
+    accentForeground: "#E65100",
+
+    // Orange — used for highlights, badges, call-to-action
+    orange: "#F57C00",
+    orangeLight: "#FFF3E0",
 
     destructive: "#ef4444",
     destructiveForeground: "#ffffff",
@@ -33,7 +40,7 @@ const colors = {
     border: "#e2e8f0",
     input: "#e2e8f0",
 
-    headerBg: "#1d4ed8",
+    headerBg: "#1565C0",
     headerText: "#ffffff",
   },
 

@@ -15,36 +15,38 @@ import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 
+const logo = require("../assets/images/logo.png");
+
 const SERVICES = [
   {
     icon: "zap" as const,
     title: "Elétrica",
     description: "Instalações, reparos e manutenção elétrica residencial e comercial",
-    color: "#f59e0b",
+    color: "#F57C00",
   },
   {
     icon: "video" as const,
     title: "CFTV / Câmeras",
     description: "Instalação e monitoramento de sistemas de segurança com câmeras",
-    color: "#3b82f6",
+    color: "#1565C0",
   },
   {
     icon: "wind" as const,
     title: "Refrigeração",
     description: "Instalação e manutenção de ar-condicionado e sistemas de refrigeração",
-    color: "#06b6d4",
+    color: "#0288D1",
   },
   {
     icon: "cpu" as const,
     title: "Automação",
     description: "Automação residencial e comercial com tecnologia de ponta",
-    color: "#8b5cf6",
+    color: "#6A1B9A",
   },
   {
     icon: "tool" as const,
     title: "Manutenção Geral",
     description: "Serviços gerais de manutenção predial e reparos diversos",
-    color: "#22c55e",
+    color: "#2E7D32",
   },
 ];
 
@@ -87,48 +89,46 @@ export default function HomeScreen() {
           style={[
             styles.hero,
             {
-              paddingTop: topInset + 24,
+              paddingTop: topInset + 16,
               backgroundColor: colors.primary,
             },
           ]}
         >
-          <View style={styles.heroContent}>
-            <View style={styles.logoRow}>
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 12,
-                }}
-              >
-                <Feather name="shield" size={24} color="#ffffff" />
+          {/* Logo + brand */}
+          <View style={styles.logoRow}>
+            <Image
+              source={logo}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+            <View>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={styles.logoServ}>Serv</Text>
+                <Text style={styles.logoControl}>Control</Text>
               </View>
-              <View>
-                <Text style={styles.logoTitle}>ServiçosPRO</Text>
-                <Text style={styles.logoSubtitle}>Soluções Técnicas</Text>
-              </View>
+              <Text style={styles.logoSubtitle}>Soluções Técnicas</Text>
             </View>
-
-            <Text style={styles.heroTagline}>
-              Serviços especializados{"\n"}para você e sua empresa
-            </Text>
-            <Text style={styles.heroSubtext}>
-              Elétrica, CFTV, Refrigeração, Automação e Manutenção Geral
-            </Text>
           </View>
+
+          <Text style={styles.heroTagline}>
+            Serviços especializados{"\n"}para você e sua empresa
+          </Text>
+          <Text style={styles.heroSubtext}>
+            Elétrica • CFTV • Refrigeração • Automação • Manutenção
+          </Text>
 
           <View style={styles.heroBadges}>
             <View style={styles.badge}>
-              <Feather name="check-circle" size={14} color="#ffffff" />
-              <Text style={styles.badgeText}>Profissionais certificados</Text>
+              <Feather name="check-circle" size={13} color="#ffffff" />
+              <Text style={styles.badgeText}>Certificados</Text>
             </View>
             <View style={styles.badge}>
-              <Feather name="clock" size={14} color="#ffffff" />
+              <Feather name="clock" size={13} color="#ffffff" />
               <Text style={styles.badgeText}>Atendimento rápido</Text>
+            </View>
+            <View style={styles.badge}>
+              <Feather name="shield" size={13} color="#ffffff" />
+              <Text style={styles.badgeText}>Garantia</Text>
             </View>
           </View>
         </View>
@@ -136,7 +136,7 @@ export default function HomeScreen() {
         {/* CTA Buttons */}
         <View style={[styles.ctaSection, { borderBottomColor: colors.border }]}>
           <TouchableOpacity
-            style={[styles.ctaPrimary, { backgroundColor: colors.primary }]}
+            style={[styles.ctaPrimary, { backgroundColor: colors.orange }]}
             onPress={() => router.push("/auth/request-budget")}
             activeOpacity={0.85}
           >
@@ -147,10 +147,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={[
               styles.ctaSecondary,
-              {
-                borderColor: colors.primary,
-                backgroundColor: colors.background,
-              },
+              { borderColor: colors.primary, backgroundColor: colors.background },
             ]}
             onPress={handleDashboard}
             activeOpacity={0.85}
@@ -167,10 +164,8 @@ export default function HomeScreen() {
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
             Nossos Serviços
           </Text>
-          <Text
-            style={[styles.sectionSubtitle, { color: colors.mutedForeground }]}
-          >
-            Soluções completas para atender todas as suas necessidades técnicas
+          <Text style={[styles.sectionSubtitle, { color: colors.mutedForeground }]}>
+            Soluções completas para todas as suas necessidades técnicas
           </Text>
 
           {SERVICES.map((svc) => (
@@ -178,32 +173,19 @@ export default function HomeScreen() {
               key={svc.title}
               style={[
                 styles.serviceItem,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                },
+                { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
               <View
-                style={[
-                  styles.serviceIcon,
-                  { backgroundColor: `${svc.color}15` },
-                ]}
+                style={[styles.serviceIcon, { backgroundColor: `${svc.color}15` }]}
               >
                 <Feather name={svc.icon} size={22} color={svc.color} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text
-                  style={[styles.serviceTitle, { color: colors.foreground }]}
-                >
+                <Text style={[styles.serviceTitle, { color: colors.foreground }]}>
                   {svc.title}
                 </Text>
-                <Text
-                  style={[
-                    styles.serviceDescription,
-                    { color: colors.mutedForeground },
-                  ]}
-                >
+                <Text style={[styles.serviceDescription, { color: colors.mutedForeground }]}>
                   {svc.description}
                 </Text>
               </View>
@@ -216,23 +198,22 @@ export default function HomeScreen() {
           style={[
             styles.aboutSection,
             {
-              backgroundColor: colors.accent,
+              backgroundColor: "#E3F2FD",
               marginHorizontal: 20,
               borderRadius: 16,
               marginBottom: 24,
+              borderLeftWidth: 4,
+              borderLeftColor: colors.primary,
             },
           ]}
         >
-          <Feather name="award" size={28} color={colors.primary} />
-          <Text
-            style={[
-              styles.aboutTitle,
-              { color: colors.foreground, marginTop: 12 },
-            ]}
-          >
-            Por que nos escolher?
-          </Text>
-          <View style={{ gap: 10, marginTop: 12 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <Image source={logo} style={{ width: 36, height: 36 }} resizeMode="contain" />
+            <Text style={[styles.aboutTitle, { color: colors.primary }]}>
+              Por que nos escolher?
+            </Text>
+          </View>
+          <View style={{ gap: 10 }}>
             {[
               "Mais de 10 anos de experiência no mercado",
               "Técnicos certificados e treinados",
@@ -240,14 +221,11 @@ export default function HomeScreen() {
               "Atendimento em até 24 horas",
               "Orçamento gratuito e sem compromisso",
             ].map((item) => (
-              <View
-                key={item}
-                style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}
-              >
+              <View key={item} style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
                 <Feather
                   name="check"
                   size={15}
-                  color={colors.primary}
+                  color={colors.orange}
                   style={{ marginTop: 2 }}
                 />
                 <Text
@@ -270,10 +248,7 @@ export default function HomeScreen() {
       {/* Floating WhatsApp Button */}
       <TouchableOpacity
         onPress={openWhatsApp}
-        style={[
-          styles.whatsappFab,
-          { bottom: bottomInset + 16 },
-        ]}
+        style={[styles.whatsappFab, { bottom: bottomInset + 16 }]}
         activeOpacity={0.85}
       >
         <Feather name="message-circle" size={26} color="#ffffff" />
@@ -287,24 +262,35 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     paddingHorizontal: 20,
   },
-  heroContent: {
-    marginBottom: 16,
-  },
   logoRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 20,
+    gap: 12,
   },
-  logoTitle: {
-    fontSize: 20,
+  logoImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+  logoServ: {
+    fontSize: 22,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
     color: "#ffffff",
+  },
+  logoControl: {
+    fontSize: 22,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    color: "#FFB74D",
   },
   logoSubtitle: {
     fontSize: 11,
     color: "rgba(255,255,255,0.7)",
     fontFamily: "Inter_400Regular",
+    marginTop: 1,
   },
   heroTagline: {
     fontSize: 26,
@@ -315,27 +301,28 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   heroSubtext: {
-    fontSize: 14,
+    fontSize: 13,
     color: "rgba(255,255,255,0.8)",
     fontFamily: "Inter_400Regular",
     lineHeight: 20,
+    marginBottom: 16,
   },
   heroBadges: {
     flexDirection: "row",
-    gap: 12,
+    gap: 8,
     flexWrap: "wrap",
   },
   badge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 5,
     backgroundColor: "rgba(255,255,255,0.15)",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: 20,
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#ffffff",
     fontFamily: "Inter_500Medium",
   },
@@ -418,10 +405,9 @@ const styles = StyleSheet.create({
   },
   aboutSection: {
     padding: 20,
-    alignItems: "flex-start",
   },
   aboutTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
   },

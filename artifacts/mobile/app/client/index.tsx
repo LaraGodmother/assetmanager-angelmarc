@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Image,
   Platform,
   RefreshControl,
   ScrollView,
@@ -18,30 +19,32 @@ import { Card } from "@/components/ui/Card";
 import { ServiceCard } from "@/components/ServiceCard";
 import { AppointmentCard } from "@/components/AppointmentCard";
 
+const logo = require("../../assets/images/logo.png");
+
 const QUICK_ACTIONS = [
   {
     icon: "file-text" as const,
     label: "Solicitar\nOrçamento",
     route: "/auth/request-budget",
-    color: "#1d4ed8",
+    color: "#F57C00",
   },
   {
     icon: "plus-circle" as const,
     label: "Novo\nServiço",
     route: "/client/new-service",
-    color: "#8b5cf6",
+    color: "#1565C0",
   },
   {
     icon: "list" as const,
     label: "Meus\nServiços",
     route: "/client/services",
-    color: "#f59e0b",
+    color: "#6A1B9A",
   },
   {
     icon: "calendar" as const,
     label: "Agendamentos",
     route: "/client/appointments",
-    color: "#22c55e",
+    color: "#2E7D32",
   },
 ];
 
@@ -72,25 +75,20 @@ export default function ClientDashboard() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: colors.primary,
-            paddingTop: topInset + 12,
-          },
-        ]}
+        style={[styles.header, { backgroundColor: colors.primary, paddingTop: topInset + 12 }]}
       >
         <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.headerGreeting}>Olá,</Text>
-            <Text style={styles.headerName} numberOfLines={1}>
-              {user?.name ?? "Cliente"}
-            </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Image source={logo} style={styles.headerLogo} resizeMode="contain" />
+            <View>
+              <Text style={styles.headerGreeting}>Olá, {user?.name?.split(" ")[0] ?? "Cliente"}</Text>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={styles.brandServ}>Serv</Text>
+                <Text style={styles.brandControl}>Control</Text>
+              </View>
+            </View>
           </View>
-          <TouchableOpacity
-            onPress={() => logout()}
-            style={styles.logoutBtn}
-          >
+          <TouchableOpacity onPress={() => logout()} style={styles.logoutBtn}>
             <Feather name="log-out" size={20} color="#ffffff" />
           </TouchableOpacity>
         </View>
@@ -122,23 +120,32 @@ export default function ClientDashboard() {
       >
         {/* Alerts */}
         {(pendingOrders > 0 || pendingBudgets > 0) && (
-          <Card style={{ backgroundColor: colors.accent }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <Feather name="bell" size={18} color={colors.primary} />
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: colors.accentForeground,
-                  fontFamily: "Inter_500Medium",
-                  flex: 1,
-                }}
-              >
-                {pendingOrders > 0
-                  ? `${pendingOrders} serviço(s) pendente(s) de aprovação`
-                  : `${pendingBudgets} orçamento(s) aguardando resposta`}
-              </Text>
-            </View>
-          </Card>
+          <View
+            style={{
+              backgroundColor: "#FFF3E0",
+              borderRadius: 12,
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              borderLeftWidth: 4,
+              borderLeftColor: colors.orange,
+            }}
+          >
+            <Feather name="bell" size={18} color={colors.orange} />
+            <Text
+              style={{
+                fontSize: 13,
+                color: "#E65100",
+                fontFamily: "Inter_500Medium",
+                flex: 1,
+              }}
+            >
+              {pendingOrders > 0
+                ? `${pendingOrders} serviço(s) pendente(s) de aprovação`
+                : `${pendingBudgets} orçamento(s) aguardando resposta`}
+            </Text>
+          </View>
         )}
 
         {/* Quick Actions */}
@@ -194,7 +201,7 @@ export default function ClientDashboard() {
                 Próximos agendamentos
               </Text>
               <TouchableOpacity onPress={() => router.push("/client/appointments")}>
-                <Text style={{ color: colors.primary, fontSize: 13, fontFamily: "Inter_500Medium" }}>
+                <Text style={{ color: colors.orange, fontSize: 13, fontFamily: "Inter_500Medium" }}>
                   Ver todos
                 </Text>
               </TouchableOpacity>
@@ -212,7 +219,7 @@ export default function ClientDashboard() {
               Serviços recentes
             </Text>
             <TouchableOpacity onPress={() => router.push("/client/services")}>
-              <Text style={{ color: colors.primary, fontSize: 13, fontFamily: "Inter_500Medium" }}>
+              <Text style={{ color: colors.orange, fontSize: 13, fontFamily: "Inter_500Medium" }}>
                 Ver todos
               </Text>
             </TouchableOpacity>
@@ -234,11 +241,7 @@ export default function ClientDashboard() {
                 </Text>
                 <TouchableOpacity onPress={() => router.push("/client/new-service")}>
                   <Text
-                    style={{
-                      color: colors.primary,
-                      fontSize: 14,
-                      fontFamily: "Inter_600SemiBold",
-                    }}
+                    style={{ color: colors.orange, fontSize: 14, fontFamily: "Inter_600SemiBold" }}
                   >
                     Solicitar agora
                   </Text>
@@ -246,9 +249,7 @@ export default function ClientDashboard() {
               </View>
             </Card>
           ) : (
-            recentOrders.map((order) => (
-              <ServiceCard key={order.id} order={order} />
-            ))
+            recentOrders.map((order) => <ServiceCard key={order.id} order={order} />)
           )}
         </View>
       </ScrollView>
@@ -267,16 +268,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  headerGreeting: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.7)",
-    fontFamily: "Inter_400Regular",
+  headerLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.15)",
   },
-  headerName: {
-    fontSize: 20,
+  brandServ: {
+    fontSize: 18,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
     color: "#ffffff",
+  },
+  brandControl: {
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    color: "#FFB74D",
+  },
+  headerGreeting: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.7)",
+    fontFamily: "Inter_400Regular",
+    marginBottom: 2,
   },
   logoutBtn: {
     width: 40,

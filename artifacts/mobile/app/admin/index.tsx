@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Image,
   Platform,
   RefreshControl,
   ScrollView,
@@ -18,16 +19,18 @@ import { Card } from "@/components/ui/Card";
 import { ServiceCard } from "@/components/ServiceCard";
 import { BudgetCard } from "@/components/BudgetCard";
 
+const logo = require("../../assets/images/logo.png");
+
 function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 const ADMIN_MENU = [
-  { icon: "users" as const, label: "Clientes", route: "/admin/clients", color: "#3b82f6" },
-  { icon: "tool" as const, label: "Serviços", route: "/admin/services", color: "#f59e0b" },
-  { icon: "file-text" as const, label: "Orçamentos", route: "/admin/budgets", color: "#8b5cf6" },
-  { icon: "clipboard" as const, label: "Ordens", route: "/admin/orders", color: "#22c55e" },
-  { icon: "calendar" as const, label: "Calendário", route: "/admin/calendar", color: "#ef4444" },
+  { icon: "users" as const, label: "Clientes", route: "/admin/clients", color: "#1565C0" },
+  { icon: "tool" as const, label: "Serviços", route: "/admin/services", color: "#F57C00" },
+  { icon: "file-text" as const, label: "Orçamentos", route: "/admin/budgets", color: "#6A1B9A" },
+  { icon: "clipboard" as const, label: "Ordens", route: "/admin/orders", color: "#2E7D32" },
+  { icon: "calendar" as const, label: "Calendário", route: "/admin/calendar", color: "#C62828" },
 ];
 
 export default function AdminDashboard() {
@@ -61,15 +64,18 @@ export default function AdminDashboard() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View
-        style={[
-          styles.header,
-          { backgroundColor: colors.primary, paddingTop: topInset + 12 },
-        ]}
+        style={[styles.header, { backgroundColor: colors.primary, paddingTop: topInset + 12 }]}
       >
         <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.headerRole}>Painel Administrativo</Text>
-            <Text style={styles.headerName}>{user?.name ?? "Admin"}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Image source={logo} style={styles.headerLogo} resizeMode="contain" />
+            <View>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={[styles.brandServ]}>Serv</Text>
+                <Text style={[styles.brandControl]}>Control</Text>
+              </View>
+              <Text style={styles.headerRole}>Painel Admin</Text>
+            </View>
           </View>
           <TouchableOpacity onPress={() => logout()} style={styles.logoutBtn}>
             <Feather name="log-out" size={20} color="#ffffff" />
@@ -82,6 +88,14 @@ export default function AdminDashboard() {
             <Text style={styles.revenueLabel}>Faturamento aprovado</Text>
             <Text style={styles.revenueValue}>{formatCurrency(totalRevenue)}</Text>
           </View>
+          <View
+            style={{
+              width: 1,
+              backgroundColor: "rgba(255,255,255,0.3)",
+              height: "100%",
+              marginHorizontal: 16,
+            }}
+          />
           <View style={{ alignItems: "flex-end" }}>
             <Text style={styles.revenueLabel}>Concluídos</Text>
             <Text style={styles.revenueValue}>{completedOrders.length}</Text>
@@ -99,20 +113,14 @@ export default function AdminDashboard() {
         {/* Stats */}
         <View style={styles.statsRow}>
           {[
-            { label: "Pendentes", value: pendingOrders, color: "#f59e0b", icon: "clock" as const },
-            { label: "Em andamento", value: inProgressOrders, color: "#3b82f6", icon: "activity" as const },
-            { label: "Orçamentos", value: pendingBudgets, color: "#8b5cf6", icon: "file-text" as const },
-            { label: "Agendamentos", value: upcomingAppts, color: "#22c55e", icon: "calendar" as const },
+            { label: "Pendentes", value: pendingOrders, color: "#F57C00", icon: "clock" as const },
+            { label: "Em andamento", value: inProgressOrders, color: "#1565C0", icon: "activity" as const },
+            { label: "Orçamentos", value: pendingBudgets, color: "#6A1B9A", icon: "file-text" as const },
+            { label: "Agendamentos", value: upcomingAppts, color: "#2E7D32", icon: "calendar" as const },
           ].map((stat) => (
             <View
               key={stat.label}
-              style={[
-                styles.statCard,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                },
-              ]}
+              style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             >
               <Feather name={stat.icon} size={18} color={stat.color} />
               <Text
@@ -155,10 +163,7 @@ export default function AdminDashboard() {
               <TouchableOpacity
                 key={item.label}
                 onPress={() => router.push(item.route as any)}
-                style={[
-                  styles.menuItem,
-                  { backgroundColor: colors.card, borderColor: colors.border },
-                ]}
+                style={[styles.menuItem, { backgroundColor: colors.card, borderColor: colors.border }]}
                 activeOpacity={0.8}
               >
                 <View
@@ -175,11 +180,7 @@ export default function AdminDashboard() {
                   <Feather name={item.icon} size={24} color={item.color} />
                 </View>
                 <Text
-                  style={{
-                    fontSize: 12,
-                    color: colors.foreground,
-                    fontFamily: "Inter_600SemiBold",
-                  }}
+                  style={{ fontSize: 12, color: colors.foreground, fontFamily: "Inter_600SemiBold" }}
                 >
                   {item.label}
                 </Text>
@@ -195,7 +196,7 @@ export default function AdminDashboard() {
               Pedidos recentes
             </Text>
             <TouchableOpacity onPress={() => router.push("/admin/orders")}>
-              <Text style={{ color: colors.primary, fontSize: 13, fontFamily: "Inter_500Medium" }}>
+              <Text style={{ color: colors.orange, fontSize: 13, fontFamily: "Inter_500Medium" }}>
                 Ver todos
               </Text>
             </TouchableOpacity>
@@ -212,7 +213,7 @@ export default function AdminDashboard() {
               Orçamentos recentes
             </Text>
             <TouchableOpacity onPress={() => router.push("/admin/budgets")}>
-              <Text style={{ color: colors.primary, fontSize: 13, fontFamily: "Inter_500Medium" }}>
+              <Text style={{ color: colors.orange, fontSize: 13, fontFamily: "Inter_500Medium" }}>
                 Ver todos
               </Text>
             </TouchableOpacity>
@@ -237,16 +238,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  headerRole: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.7)",
-    fontFamily: "Inter_400Regular",
+  headerLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.15)",
   },
-  headerName: {
-    fontSize: 20,
+  brandServ: {
+    fontSize: 18,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
     color: "#ffffff",
+  },
+  brandControl: {
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    color: "#FFB74D",
+  },
+  headerRole: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.7)",
+    fontFamily: "Inter_400Regular",
+    marginTop: 1,
   },
   logoutBtn: {
     width: 40,
@@ -271,7 +285,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   revenueValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
     color: "#ffffff",

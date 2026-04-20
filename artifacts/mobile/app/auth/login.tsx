@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,6 +17,8 @@ import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+
+const logo = require("../../assets/images/logo.png");
 
 export default function LoginScreen() {
   const colors = useColors();
@@ -91,35 +94,37 @@ export default function LoginScreen() {
 
         {/* Logo */}
         <View style={{ alignItems: "center", marginBottom: 36 }}>
-          <View
+          <Image
+            source={logo}
             style={{
-              width: 72,
-              height: 72,
-              borderRadius: 20,
-              backgroundColor: colors.primary,
-              alignItems: "center",
-              justifyContent: "center",
+              width: 90,
+              height: 90,
               marginBottom: 16,
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.3,
-              shadowRadius: 16,
-              elevation: 8,
             }}
-          >
-            <Feather name="shield" size={36} color="#ffffff" />
+            resizeMode="contain"
+          />
+          <View style={{ flexDirection: "row", marginBottom: 6 }}>
+            <Text
+              style={{
+                fontSize: 26,
+                fontWeight: "700",
+                fontFamily: "Inter_700Bold",
+                color: colors.primary,
+              }}
+            >
+              Serv
+            </Text>
+            <Text
+              style={{
+                fontSize: 26,
+                fontWeight: "700",
+                fontFamily: "Inter_700Bold",
+                color: colors.orange,
+              }}
+            >
+              Control
+            </Text>
           </View>
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "700",
-              fontFamily: "Inter_700Bold",
-              color: colors.foreground,
-              marginBottom: 4,
-            }}
-          >
-            Bem-vindo de volta
-          </Text>
           <Text
             style={{
               fontSize: 14,
