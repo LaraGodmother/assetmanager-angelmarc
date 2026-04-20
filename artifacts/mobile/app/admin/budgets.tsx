@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Modal,
   Platform,
   Pressable,
@@ -9,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { exportAndShare, fmtDate, fmtBrl } from "@/lib/exportCsv";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -36,6 +38,26 @@ export default function AdminBudgetsScreen() {
   const [showModal, setShowModal] = useState(false);
   const [valueInput, setValueInput] = useState("");
   const [notes, setNotes] = useState("");
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const headers = [
+        "ID", "Título", "Descrição", "Status",
+        "Valor (R$)", "Serviço", "Notas", "Criado em",
+      ];
+      const rows = budgets.map((b) => [
+        b.id, b.title, b.description ?? "",
+        b.status, fmtBrl(b.value ?? 0),
+        b.serviceType ?? "", b.notes ?? "",
+        fmtDate(b.createdAt),
+      ]);
+      await exportAndShare(`orcamentos_servcontrol_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const filtered = budgets
     .filter((b) => filter === "Todos" || b.status === filter)
@@ -85,15 +107,24 @@ export default function AdminBudgetsScreen() {
         >
           Orçamentos
         </Text>
-        <Text
+        <TouchableOpacity
+          onPress={handleExport}
+          disabled={exporting || budgets.length === 0}
           style={{
-            fontSize: 12,
-            color: colors.mutedForeground,
-            fontFamily: "Inter_400Regular",
+            backgroundColor: "#22c55e18",
+            borderRadius: 10,
+            width: 38,
+            height: 38,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {filtered.length} registros
-        </Text>
+          {exporting ? (
+            <ActivityIndicator size="small" color="#22c55e" />
+          ) : (
+            <Feather name="download" size={18} color="#22c55e" />
+          )}
+        </TouchableOpacity>
       </View>
 
       <ScrollView

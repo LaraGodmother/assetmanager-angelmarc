@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Modal,
   Platform,
   Pressable,
@@ -9,6 +10,7 @@ import {
   View,
   TextInput,
 } from "react-native";
+import { exportAndShare, fmtDate, fmtBrl } from "@/lib/exportCsv";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -53,6 +55,28 @@ export default function AdminOrdersScreen() {
   const [showModal, setShowModal] = useState(false);
   const [price, setPrice] = useState("");
   const [cost, setCost] = useState("");
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const headers = [
+        "ID", "Título", "Descrição", "Status", "Serviço",
+        "Preço (R$)", "Custo (R$)", "Lucro (R$)", "Forma Pagto", "Pago (R$)",
+        "Criado em", "Agendado para",
+      ];
+      const rows = serviceOrders.map((o) => [
+        o.id, o.title, o.description ?? "",
+        o.status, o.serviceType ?? "",
+        fmtBrl(o.price), fmtBrl(o.cost), fmtBrl((o.price ?? 0) - (o.cost ?? 0)),
+        o.paymentMethod ?? "", fmtBrl(o.amountPaid),
+        fmtDate(o.createdAt), fmtDate(o.scheduledAt),
+      ]);
+      await exportAndShare(`ordens_servcontrol_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const filtered = serviceOrders
     .filter((o) => filter === "Todos" || o.status === filter)
@@ -107,15 +131,24 @@ export default function AdminOrdersScreen() {
           Ordens de Serviço
         </Text>
 
-        <Text
+        <TouchableOpacity
+          onPress={handleExport}
+          disabled={exporting || serviceOrders.length === 0}
           style={{
-            fontSize: 12,
-            color: colors.mutedForeground,
-            fontFamily: "Inter_400Regular",
+            backgroundColor: "#22c55e18",
+            borderRadius: 10,
+            width: 38,
+            height: 38,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {filtered.length} registros
-        </Text>
+          {exporting ? (
+            <ActivityIndicator size="small" color="#22c55e" />
+          ) : (
+            <Feather name="download" size={18} color="#22c55e" />
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* FILTER */}
