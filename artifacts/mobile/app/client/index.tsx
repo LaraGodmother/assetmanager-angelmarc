@@ -73,26 +73,43 @@ export default function ClientDashboard() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
+      {/* White logo bar */}
       <View
-        style={[styles.header, { backgroundColor: colors.primary, paddingTop: topInset + 12 }]}
+        style={{
+          backgroundColor: "#ffffff",
+          paddingTop: topInset + 12,
+          paddingBottom: 14,
+          paddingHorizontal: 20,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderBottomWidth: 1,
+          borderBottomColor: "#e2e8f0",
+        }}
       >
-        <View style={styles.headerContent}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Image source={logo} style={styles.headerLogo} resizeMode="contain" />
-            <View>
-              <Text style={styles.headerGreeting}>Olá, {user?.name?.split(" ")[0] ?? "Cliente"}</Text>
-              <View style={{ flexDirection: "row" }}>
-                <Text style={styles.brandServ}>Serv</Text>
-                <Text style={styles.brandControl}>Control</Text>
-              </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Image source={logo} style={{ width: 50, height: 50 }} resizeMode="contain" />
+          <View>
+            <Text style={{ fontSize: 12, color: "#64748b", fontFamily: "Inter_400Regular" }}>
+              Olá, {user?.name?.split(" ")[0] ?? "Cliente"}
+            </Text>
+            <View style={{ flexDirection: "row" }}>
+              <Text style={{ fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold", color: "#1565C0" }}>
+                Serv
+              </Text>
+              <Text style={{ fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold", color: "#F57C00" }}>
+                Control
+              </Text>
             </View>
           </View>
-          <TouchableOpacity onPress={() => logout()} style={styles.logoutBtn}>
-            <Feather name="log-out" size={20} color="#ffffff" />
-          </TouchableOpacity>
         </View>
+        <TouchableOpacity onPress={() => logout()} style={styles.logoutBtn}>
+          <Feather name="log-out" size={20} color="#1565C0" />
+        </TouchableOpacity>
+      </View>
 
+      {/* Blue stats bar */}
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <View style={styles.headerStats}>
           <View style={styles.headerStat}>
             <Text style={styles.headerStatValue}>{orders.length}</Text>
@@ -296,7 +313,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "#EFF6FF",
     alignItems: "center",
     justifyContent: "center",
   },

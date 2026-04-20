@@ -84,32 +84,65 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: bottomInset + 90 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Hero */}
+        {/* White logo bar */}
+        <View
+          style={{
+            backgroundColor: "#ffffff",
+            paddingTop: topInset + 12,
+            paddingBottom: 16,
+            paddingHorizontal: 20,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <Image
+            source={logo}
+            style={{ width: 60, height: 60 }}
+            resizeMode="contain"
+          />
+          <View>
+            <View style={{ flexDirection: "row" }}>
+              <Text
+                style={{
+                  fontSize: 24,
+                  fontWeight: "700",
+                  fontFamily: "Inter_700Bold",
+                  color: "#1565C0",
+                }}
+              >
+                Serv
+              </Text>
+              <Text
+                style={{
+                  fontSize: 24,
+                  fontWeight: "700",
+                  fontFamily: "Inter_700Bold",
+                  color: "#F57C00",
+                }}
+              >
+                Control
+              </Text>
+            </View>
+            <Text
+              style={{
+                fontSize: 12,
+                color: "#64748b",
+                fontFamily: "Inter_400Regular",
+              }}
+            >
+              Soluções Técnicas
+            </Text>
+          </View>
+        </View>
+
+        {/* Blue hero section */}
         <View
           style={[
             styles.hero,
-            {
-              paddingTop: topInset + 16,
-              backgroundColor: colors.primary,
-            },
+            { backgroundColor: colors.primary },
           ]}
         >
-          {/* Logo + brand */}
-          <View style={styles.logoRow}>
-            <Image
-              source={logo}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-            <View>
-              <View style={{ flexDirection: "row" }}>
-                <Text style={styles.logoServ}>Serv</Text>
-                <Text style={styles.logoControl}>Control</Text>
-              </View>
-              <Text style={styles.logoSubtitle}>Soluções Técnicas</Text>
-            </View>
-          </View>
-
           <Text style={styles.heroTagline}>
             Serviços especializados{"\n"}para você e sua empresa
           </Text>
