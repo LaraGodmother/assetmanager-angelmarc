@@ -1,0 +1,174 @@
+const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  "https://0c4f309c-6b3c-4e2f-96e4-8aadfecef50e-00-3gjzlqu4remhq.picard.replit.dev/api";
+
+async function request<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { "Content-Type": "application/json", ...options.headers },
+    ...options,
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error ?? `HTTP ${res.status}`);
+  }
+  return data as T;
+}
+
+export const api = {
+  // Auth
+  login: (email: string, password: string) =>
+    request<{ user: ApiUser }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  register: (name: string, email: string, password: string, phone?: string) =>
+    request<{ user: ApiUser }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password, phone }),
+    }),
+
+  // Services
+  getServices: () => request<ApiService[]>("/services"),
+
+  // Budgets
+  getBudgets: (clientId?: number) =>
+    request<ApiBudget[]>(clientId ? `/budgets?clientId=${clientId}` : "/budgets"),
+
+  createBudget: (data: {
+    clientId: number;
+    serviceId: number;
+    baseValue: number;
+    profitMargin?: number;
+    observations?: string;
+  }) =>
+    request<ApiBudget>("/budgets", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateBudget: (
+    id: number,
+    data: Partial<{ status: string; baseValue: number; profitMargin: number; observations: string }>
+  ) =>
+    request<ApiBudget>(`/budgets/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  // Appointments
+  getAppointments: (clientId?: number) =>
+    request<ApiAppointment[]>(
+      clientId ? `/appointments?clientId=${clientId}` : "/appointments"
+    ),
+
+  createAppointment: (data: {
+    clientId: number;
+    serviceId: number;
+    date: string;
+    time: string;
+    notes?: string;
+  }) =>
+    request<ApiAppointment>("/appointments", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateAppointment: (id: number, data: Partial<{ status: string; date: string; time: string }>) =>
+    request<ApiAppointment>(`/appointments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  // Orders
+  getOrders: (clientId?: number) =>
+    request<ApiOrder[]>(clientId ? `/orders?clientId=${clientId}` : "/orders"),
+
+  createOrder: (data: {
+    clientId: number;
+    serviceId: number;
+    description?: string;
+    preferredDate?: string;
+    preferredTime?: string;
+    budgetId?: number;
+  }) =>
+    request<ApiOrder>("/orders", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateOrder: (id: number, data: Partial<{ status: string; description: string }>) =>
+    request<ApiOrder>(`/orders/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  // Clients
+  getClients: () => request<ApiUser[]>("/clients"),
+};
+
+// ─── API Types ────────────────────────────────────────────────────────────────
+
+export interface ApiUser {
+  id: number;
+  name: string;
+  email: string;
+  role: "admin" | "client";
+  phone?: string | null;
+  createdAt: string;
+}
+
+export interface ApiService {
+  id: number;
+  name: string;
+  description: string;
+  basePrice: string;
+  rules?: string | null;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ApiBudget {
+  id: number;
+  clientId: number;
+  serviceId: number;
+  baseValue: string;
+  profitMargin: string;
+  finalValue: string;
+  observations?: string | null;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  clientName?: string | null;
+  serviceName?: string | null;
+}
+
+export interface ApiAppointment {
+  id: number;
+  clientId: number;
+  serviceId: number;
+  date: string;
+  time: string;
+  status: "scheduled" | "confirmed" | "cancelled" | "done";
+  notes?: string | null;
+  createdAt: string;
+  clientName?: string | null;
+  serviceName?: string | null;
+}
+
+export interface ApiOrder {
+  id: number;
+  budgetId?: number | null;
+  clientId: number;
+  serviceId: number;
+  description?: string | null;
+  status: "pending" | "in_progress" | "done" | "cancelled";
+  preferredDate?: string | null;
+  preferredTime?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  clientName?: string | null;
+  serviceName?: string | null;
+}

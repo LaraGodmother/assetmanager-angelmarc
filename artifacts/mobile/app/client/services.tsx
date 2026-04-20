@@ -23,7 +23,7 @@ export default function ClientServicesScreen() {
   const { getClientOrders } = useData();
 
   const topInset = Platform.OS === "web" ? 67 : insets.top;
-  const orders = getClientOrders(user?.id ?? "").sort(
+  const orders = getClientOrders(String(user?.id ?? "")).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 

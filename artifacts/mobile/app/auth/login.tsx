@@ -255,7 +255,7 @@ export default function LoginScreen() {
               textAlign: "center",
             }}
           >
-            Demo admin: admin@servicospro.com / admin123
+            Demo admin: admin@servcontrol.com / admin123
           </Text>
         </View>
       </ScrollView>

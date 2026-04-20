@@ -13,7 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
-import { useData, SERVICE_TYPES } from "@/context/DataContext";
+import { useData } from "@/context/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
@@ -22,13 +22,16 @@ export default function RequestBudgetScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { isAuthenticated, user } = useAuth();
-  const { createBudgetRequest } = useData();
+  const { createBudgetRequest, services } = useData();
 
-  const [serviceType, setServiceType] = useState("");
+  const activeServices = services.filter((s) => s.active);
+  const serviceNames = activeServices.map((s) => s.name);
+
+  const [serviceName, setServiceName] = useState("");
   const [description, setDescription] = useState("");
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
-  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [phone, setPhone] = useState((user?.phone as string) ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -38,7 +41,7 @@ export default function RequestBudgetScreen() {
 
   function validate() {
     const errs: Record<string, string> = {};
-    if (!serviceType) errs.serviceType = "Selecione o tipo de serviço.";
+    if (!serviceName) errs.serviceName = "Selecione o tipo de serviço.";
     if (!description.trim()) errs.description = "Descreva o serviço.";
     if (!isAuthenticated) {
       if (!name.trim()) errs.name = "Informe seu nome.";
@@ -50,16 +53,30 @@ export default function RequestBudgetScreen() {
 
   async function handleSubmit() {
     if (!validate()) return;
+
+    if (!isAuthenticated || !user) {
+      setErrors({ general: "Faça login para solicitar um orçamento." });
+      return;
+    }
+
+    const service = activeServices.find((s) => s.name === serviceName);
+    if (!service) {
+      setErrors({ general: "Serviço inválido." });
+      return;
+    }
+
     setLoading(true);
     try {
       await createBudgetRequest({
-        clientId: user?.id ?? `guest-${Date.now()}`,
-        clientName: user?.name ?? name.trim(),
-        serviceType,
-        description: description.trim(),
+        clientId: String(user.id),
+        serviceId: service.id,
+        baseValue: service.basePrice,
+        observations: description.trim(),
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setSuccess(true);
+    } catch (err: any) {
+      setErrors({ general: err?.message ?? "Erro ao solicitar orçamento." });
     } finally {
       setLoading(false);
     }
@@ -148,13 +165,7 @@ export default function RequestBudgetScreen() {
           }}
         >
           <Feather name="arrow-left" size={20} color={colors.primary} />
-          <Text
-            style={{
-              fontSize: 15,
-              color: colors.primary,
-              fontFamily: "Inter_500Medium",
-            }}
-          >
+          <Text style={{ fontSize: 15, color: colors.primary, fontFamily: "Inter_500Medium" }}>
             Voltar
           </Text>
         </TouchableOpacity>
@@ -182,17 +193,60 @@ export default function RequestBudgetScreen() {
           Preencha o formulário e entraremos em contato em breve
         </Text>
 
+        {errors.general ? (
+          <View
+            style={{
+              backgroundColor: "#FEF2F2",
+              padding: 12,
+              borderRadius: 10,
+              marginBottom: 12,
+            }}
+          >
+            <Text style={{ color: colors.destructive, fontSize: 13, fontFamily: "Inter_400Regular" }}>
+              {errors.general}
+            </Text>
+          </View>
+        ) : null}
+
         {!isAuthenticated ? (
           <>
+            <View
+              style={{
+                backgroundColor: "#FFF3E0",
+                padding: 12,
+                borderRadius: 10,
+                marginBottom: 16,
+                flexDirection: "row",
+                gap: 8,
+                alignItems: "flex-start",
+              }}
+            >
+              <Feather name="info" size={15} color={colors.orange} style={{ marginTop: 1 }} />
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: "#E65100",
+                  fontFamily: "Inter_400Regular",
+                  flex: 1,
+                  lineHeight: 18,
+                }}
+              >
+                Para solicitar um orçamento é necessário ter uma conta.{" "}
+                <Text
+                  style={{ fontFamily: "Inter_600SemiBold", color: colors.primary }}
+                  onPress={() => router.push("/auth/login")}
+                >
+                  Fazer login
+                </Text>
+              </Text>
+            </View>
             <Input
               label="Nome completo"
               value={name}
               onChangeText={setName}
               placeholder="Seu nome"
               error={errors.name}
-              leftIcon={
-                <Feather name="user" size={18} color={colors.mutedForeground} />
-              }
+              leftIcon={<Feather name="user" size={18} color={colors.mutedForeground} />}
             />
             <Input
               label="E-mail"
@@ -202,9 +256,7 @@ export default function RequestBudgetScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               error={errors.email}
-              leftIcon={
-                <Feather name="mail" size={18} color={colors.mutedForeground} />
-              }
+              leftIcon={<Feather name="mail" size={18} color={colors.mutedForeground} />}
             />
             <Input
               label="Telefone"
@@ -212,21 +264,43 @@ export default function RequestBudgetScreen() {
               onChangeText={setPhone}
               placeholder="(11) 99999-9999"
               keyboardType="phone-pad"
-              leftIcon={
-                <Feather name="phone" size={18} color={colors.mutedForeground} />
-              }
+              leftIcon={<Feather name="phone" size={18} color={colors.mutedForeground} />}
             />
           </>
         ) : null}
 
         <Select
           label="Tipo de serviço"
-          options={SERVICE_TYPES}
-          value={serviceType}
-          onChange={setServiceType}
+          options={serviceNames.length > 0 ? serviceNames : ["Carregando..."]}
+          value={serviceName}
+          onChange={setServiceName}
           placeholder="Selecione o serviço"
-          error={errors.serviceType}
+          error={errors.serviceName}
         />
+
+        {serviceName && activeServices.find((s) => s.name === serviceName) ? (
+          <View
+            style={{
+              backgroundColor: "#E3F2FD",
+              padding: 12,
+              borderRadius: 10,
+              marginBottom: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <Feather name="tag" size={14} color={colors.primary} />
+            <Text style={{ fontSize: 13, color: colors.primary, fontFamily: "Inter_500Medium" }}>
+              Valor base:{" "}
+              <Text style={{ fontFamily: "Inter_700Bold" }}>
+                {Number(
+                  activeServices.find((s) => s.name === serviceName)?.basePrice
+                ).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </Text>
+            </Text>
+          </View>
+        ) : null}
 
         <View style={{ marginBottom: 12 }}>
           <Text
@@ -249,25 +323,18 @@ export default function RequestBudgetScreen() {
               padding: 12,
             }}
           >
-            <View style={{ minHeight: 100 }}>
-              <Input
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Descreva detalhadamente o serviço que você precisa..."
-                multiline
-                numberOfLines={4}
-                style={{ height: 100, textAlignVertical: "top", paddingHorizontal: 0 }}
-              />
-            </View>
+            <Input
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Descreva detalhadamente o serviço que você precisa..."
+              multiline
+              numberOfLines={4}
+              style={{ height: 100, textAlignVertical: "top", paddingHorizontal: 0 }}
+            />
           </View>
           {errors.description ? (
             <Text
-              style={{
-                color: colors.destructive,
-                fontSize: 12,
-                marginTop: 4,
-                fontFamily: "Inter_400Regular",
-              }}
+              style={{ color: colors.destructive, fontSize: 12, marginTop: 4, fontFamily: "Inter_400Regular" }}
             >
               {errors.description}
             </Text>

@@ -22,7 +22,7 @@ export default function ClientBudgetsScreen() {
   const { getClientBudgets } = useData();
 
   const topInset = Platform.OS === "web" ? 67 : insets.top;
-  const budgets = getClientBudgets(user?.id ?? "").sort(
+  const budgets = getClientBudgets(String(user?.id ?? "")).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 

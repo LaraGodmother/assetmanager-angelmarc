@@ -13,7 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
-import { useData, SERVICE_TYPES } from "@/context/DataContext";
+import { useData } from "@/context/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
@@ -27,9 +27,12 @@ export default function NewServiceScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { createServiceOrder } = useData();
+  const { createServiceOrder, services } = useData();
 
-  const [serviceType, setServiceType] = useState("");
+  const activeServices = services.filter((s) => s.active);
+  const serviceNames = activeServices.map((s) => s.name);
+
+  const [serviceName, setServiceName] = useState("");
   const [description, setDescription] = useState("");
   const [preferredDate, setPreferredDate] = useState("");
   const [preferredTime, setPreferredTime] = useState("");
@@ -42,7 +45,7 @@ export default function NewServiceScreen() {
 
   function validate() {
     const errs: Record<string, string> = {};
-    if (!serviceType) errs.serviceType = "Selecione o tipo de serviço.";
+    if (!serviceName) errs.serviceName = "Selecione o tipo de serviço.";
     if (!description.trim()) errs.description = "Descreva o serviço desejado.";
     if (!preferredDate.trim()) errs.preferredDate = "Informe a data preferida.";
     if (!preferredTime) errs.preferredTime = "Selecione o horário preferido.";
@@ -51,19 +54,22 @@ export default function NewServiceScreen() {
   }
 
   async function handleSubmit() {
-    if (!validate()) return;
+    if (!validate() || !user) return;
+    const service = activeServices.find((s) => s.name === serviceName);
+    if (!service) return;
     setLoading(true);
     try {
       await createServiceOrder({
-        clientId: user?.id ?? "",
-        clientName: user?.name ?? "",
-        serviceType,
+        clientId: String(user.id),
+        serviceId: service.id,
         description: description.trim(),
         preferredDate,
         preferredTime,
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setSuccess(true);
+    } catch (err: any) {
+      setErrors({ general: err?.message ?? "Erro ao solicitar serviço." });
     } finally {
       setLoading(false);
     }
@@ -161,10 +167,7 @@ export default function NewServiceScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{
-          padding: 20,
-          paddingBottom: bottomInset + 24,
-        }}
+        contentContainerStyle={{ padding: 20, paddingBottom: bottomInset + 24 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -180,13 +183,28 @@ export default function NewServiceScreen() {
           Preencha os detalhes do serviço que você precisa e nossa equipe entrará em contato
         </Text>
 
+        {errors.general ? (
+          <View
+            style={{
+              backgroundColor: "#FEF2F2",
+              padding: 12,
+              borderRadius: 10,
+              marginBottom: 12,
+            }}
+          >
+            <Text style={{ color: colors.destructive, fontSize: 13, fontFamily: "Inter_400Regular" }}>
+              {errors.general}
+            </Text>
+          </View>
+        ) : null}
+
         <Select
           label="Tipo de serviço"
-          options={SERVICE_TYPES}
-          value={serviceType}
-          onChange={setServiceType}
+          options={serviceNames.length > 0 ? serviceNames : ["Carregando..."]}
+          value={serviceName}
+          onChange={setServiceName}
           placeholder="Selecione o serviço"
-          error={errors.serviceType}
+          error={errors.serviceName}
         />
 
         <View style={{ marginBottom: 12 }}>
@@ -232,9 +250,7 @@ export default function NewServiceScreen() {
           placeholder="DD/MM/AAAA"
           keyboardType="numeric"
           error={errors.preferredDate}
-          leftIcon={
-            <Feather name="calendar" size={18} color={colors.mutedForeground} />
-          }
+          leftIcon={<Feather name="calendar" size={18} color={colors.mutedForeground} />}
         />
 
         <Select

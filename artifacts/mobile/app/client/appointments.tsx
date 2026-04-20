@@ -22,7 +22,7 @@ export default function ClientAppointmentsScreen() {
   const { getClientAppointments } = useData();
 
   const topInset = Platform.OS === "web" ? 67 : insets.top;
-  const appointments = getClientAppointments(user?.id ?? "").sort(
+  const appointments = getClientAppointments(String(user?.id ?? "")).sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
