@@ -106,6 +106,37 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  // Services CRUD
+  createService: (data: {
+    name: string;
+    description: string;
+    basePrice: number;
+    rules?: string;
+    active?: boolean;
+  }) =>
+    request<ApiService>("/services", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateService: (
+    id: number,
+    data: Partial<{
+      name: string;
+      description: string;
+      basePrice: number;
+      rules: string;
+      active: boolean;
+    }>
+  ) =>
+    request<ApiService>(`/services/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  deleteService: (id: number) =>
+    request<{ success: boolean }>(`/services/${id}`, { method: "DELETE" }),
+
   // Clients
   getClients: () => request<ApiUser[]>("/clients"),
 };

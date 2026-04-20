@@ -235,6 +235,26 @@ interface DataContextType {
     notes?: string;
   }) => Promise<Appointment>;
 
+  // Service catalog operations
+  createService: (data: {
+    name: string;
+    description: string;
+    basePrice: number;
+    rules?: string;
+    active?: boolean;
+  }) => Promise<Service>;
+  updateService: (
+    id: string,
+    data: Partial<{
+      name: string;
+      description: string;
+      basePrice: number;
+      rules: string;
+      active: boolean;
+    }>
+  ) => Promise<Service>;
+  deleteService: (id: string) => Promise<void>;
+
   refreshData: () => Promise<void>;
 }
 
@@ -370,6 +390,47 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  // ── Operações de Catálogo de Serviços ─────────────────────────────────
+  const createService = useCallback(
+    async (data: {
+      name: string;
+      description: string;
+      basePrice: number;
+      rules?: string;
+      active?: boolean;
+    }) => {
+      const created = await api.createService(data);
+      const mapped = mapService(created);
+      setServices((prev) => [...prev, mapped].sort((a, b) => a.name.localeCompare(b.name)));
+      return mapped;
+    },
+    []
+  );
+
+  const updateService = useCallback(
+    async (
+      id: string,
+      data: Partial<{
+        name: string;
+        description: string;
+        basePrice: number;
+        rules: string;
+        active: boolean;
+      }>
+    ) => {
+      const updated = await api.updateService(Number(id), data);
+      const mapped = mapService(updated);
+      setServices((prev) => prev.map((s) => (s.id === id ? mapped : s)));
+      return mapped;
+    },
+    []
+  );
+
+  const deleteService = useCallback(async (id: string) => {
+    await api.deleteService(Number(id));
+    setServices((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
   const refreshData = useCallback(async () => {
     await loadData();
   }, [loadData]);
@@ -389,6 +450,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         createBudget,
         updateAppointmentStatus,
         createAppointment,
+        createService,
+        updateService,
+        deleteService,
         refreshData,
       }}
     >
