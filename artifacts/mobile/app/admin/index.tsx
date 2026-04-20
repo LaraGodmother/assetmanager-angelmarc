@@ -1,0 +1,309 @@
+import React from "react";
+import {
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
+import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/context/AuthContext";
+import { useData } from "@/context/DataContext";
+import { Card } from "@/components/ui/Card";
+import { ServiceCard } from "@/components/ServiceCard";
+import { BudgetCard } from "@/components/BudgetCard";
+
+function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+const ADMIN_MENU = [
+  { icon: "users" as const, label: "Clientes", route: "/admin/clients", color: "#3b82f6" },
+  { icon: "tool" as const, label: "Serviços", route: "/admin/services", color: "#f59e0b" },
+  { icon: "file-text" as const, label: "Orçamentos", route: "/admin/budgets", color: "#8b5cf6" },
+  { icon: "clipboard" as const, label: "Ordens", route: "/admin/orders", color: "#22c55e" },
+  { icon: "calendar" as const, label: "Calendário", route: "/admin/calendar", color: "#ef4444" },
+];
+
+export default function AdminDashboard() {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const { user, logout } = useAuth();
+  const { serviceOrders, budgets, appointments, refreshData, isLoading } = useData();
+
+  const topInset = Platform.OS === "web" ? 67 : insets.top;
+
+  const pendingOrders = serviceOrders.filter((o) => o.status === "pendente").length;
+  const inProgressOrders = serviceOrders.filter((o) => o.status === "em_andamento").length;
+  const pendingBudgets = budgets.filter((b) => b.status === "aguardando").length;
+  const upcomingAppts = appointments.filter(
+    (a) => a.status === "agendado" || a.status === "confirmado"
+  ).length;
+
+  const completedOrders = serviceOrders.filter((o) => o.status === "concluido");
+  const approvedBudgets = budgets.filter((b) => b.status === "aprovado" && b.value);
+  const totalRevenue = approvedBudgets.reduce((sum, b) => sum + (b.value ?? 0), 0);
+
+  const recentOrders = serviceOrders
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
+
+  const recentBudgets = budgets
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 2);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Header */}
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.primary, paddingTop: topInset + 12 },
+        ]}
+      >
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.headerRole}>Painel Administrativo</Text>
+            <Text style={styles.headerName}>{user?.name ?? "Admin"}</Text>
+          </View>
+          <TouchableOpacity onPress={() => logout()} style={styles.logoutBtn}>
+            <Feather name="log-out" size={20} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Revenue card */}
+        <View style={styles.revenueCard}>
+          <View>
+            <Text style={styles.revenueLabel}>Faturamento aprovado</Text>
+            <Text style={styles.revenueValue}>{formatCurrency(totalRevenue)}</Text>
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={styles.revenueLabel}>Concluídos</Text>
+            <Text style={styles.revenueValue}>{completedOrders.length}</Text>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={{ padding: 16, gap: 20, paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={refreshData} tintColor={colors.primary} />
+        }
+      >
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          {[
+            { label: "Pendentes", value: pendingOrders, color: "#f59e0b", icon: "clock" as const },
+            { label: "Em andamento", value: inProgressOrders, color: "#3b82f6", icon: "activity" as const },
+            { label: "Orçamentos", value: pendingBudgets, color: "#8b5cf6", icon: "file-text" as const },
+            { label: "Agendamentos", value: upcomingAppts, color: "#22c55e", icon: "calendar" as const },
+          ].map((stat) => (
+            <View
+              key={stat.label}
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Feather name={stat.icon} size={18} color={stat.color} />
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "700",
+                  fontFamily: "Inter_700Bold",
+                  color: colors.foreground,
+                  marginTop: 4,
+                }}
+              >
+                {stat.value}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 10,
+                  color: colors.mutedForeground,
+                  fontFamily: "Inter_400Regular",
+                  textAlign: "center",
+                  marginTop: 2,
+                }}
+              >
+                {stat.label}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Admin Menu */}
+        <View>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+            Gerenciamento
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 10, paddingRight: 8 }}
+          >
+            {ADMIN_MENU.map((item) => (
+              <TouchableOpacity
+                key={item.label}
+                onPress={() => router.push(item.route as any)}
+                style={[
+                  styles.menuItem,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+                activeOpacity={0.8}
+              >
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 14,
+                    backgroundColor: `${item.color}15`,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  <Feather name={item.icon} size={24} color={item.color} />
+                </View>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: colors.foreground,
+                    fontFamily: "Inter_600SemiBold",
+                  }}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Recent orders */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              Pedidos recentes
+            </Text>
+            <TouchableOpacity onPress={() => router.push("/admin/orders")}>
+              <Text style={{ color: colors.primary, fontSize: 13, fontFamily: "Inter_500Medium" }}>
+                Ver todos
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {recentOrders.map((order) => (
+            <ServiceCard key={order.id} order={order} />
+          ))}
+        </View>
+
+        {/* Recent budgets */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              Orçamentos recentes
+            </Text>
+            <TouchableOpacity onPress={() => router.push("/admin/budgets")}>
+              <Text style={{ color: colors.primary, fontSize: 13, fontFamily: "Inter_500Medium" }}>
+                Ver todos
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {recentBudgets.map((budget) => (
+            <BudgetCard key={budget.id} budget={budget} />
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  headerRole: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.7)",
+    fontFamily: "Inter_400Regular",
+  },
+  headerName: {
+    fontSize: 20,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    color: "#ffffff",
+  },
+  logoutBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  revenueCard: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  revenueLabel: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.7)",
+    fontFamily: "Inter_400Regular",
+    marginBottom: 4,
+  },
+  revenueValue: {
+    fontSize: 22,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    color: "#ffffff",
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  statCard: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    alignItems: "center",
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    marginBottom: 12,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  menuItem: {
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    minWidth: 90,
+  },
+});

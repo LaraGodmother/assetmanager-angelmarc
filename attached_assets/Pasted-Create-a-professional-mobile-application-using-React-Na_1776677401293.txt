@@ -1,0 +1,130 @@
+Create a professional mobile application using React Native (Expo) with Firebase Firestore.
+
+The app is for service companies (electricians, CCTV installers, refrigeration technicians, automation technicians, general maintenance).
+
+LANGUAGE: Brazilian Portuguese only.
+
+-------------------------------------
+
+CORE STRUCTURE
+
+Build a multi-role system:
+
+1. ADMIN (Prestador de Serviço)
+2. CLIENT (Cliente)
+
+-------------------------------------
+
+AUTHENTICATION (Firebase Auth)
+
+- Email and password login
+- Register screen for clients
+- Separate login flow for admin and client
+- Password recovery
+- Persistent session
+
+-------------------------------------
+
+NAVIGATION
+
+Use React Navigation:
+
+- Auth Stack (Login/Register)
+- Admin Stack
+- Client Stack
+
+-------------------------------------
+
+FIREBASE
+
+Connect Firestore with collections:
+
+users
+clients
+services
+budgets
+service_orders
+appointments
+expenses
+payments
+notifications
+
+-------------------------------------
+
+PUBLIC HOME SCREEN (before login)
+
+Include:
+
+- Company presentation
+- List of services (mock data initially)
+- WhatsApp button (floating)
+- Button: "Solicitar Orçamento"
+- Button: "Criar Conta"
+
+WhatsApp message:
+"Olá, gostaria de solicitar um orçamento."
+
+-------------------------------------
+
+CLIENT AREA
+
+After login:
+
+Client Dashboard:
+
+- View appointments
+- View budgets
+- Request new service
+- Service history
+
+Service request form:
+
+- Service type
+- Description
+- Upload images (placeholder for now)
+- Preferred date
+- Preferred time
+
+-------------------------------------
+
+ADMIN AREA
+
+Admin Dashboard:
+
+- Total revenue (mock calculations first)
+- Pending services
+- Budgets received
+- Upcoming appointments
+
+Screens:
+
+- Clients list
+- Services management
+- Budget management
+- Service orders
+- Calendar view (basic UI first)
+
+-------------------------------------
+
+UI DESIGN
+
+- Clean, modern, professional
+- White + blue theme
+- Mobile-first layout
+- Simple icons
+
+-------------------------------------
+
+IMPORTANT
+
+- Create complete folder structure
+- Use reusable components
+- Keep code modular
+- Prepare for scaling
+- Do NOT overcomplicate financial logic in first version
+
+-------------------------------------
+
+GOAL
+
+A fully working MVP with authentication, navigation, Firebase connection, and basic screens for admin and client roles.

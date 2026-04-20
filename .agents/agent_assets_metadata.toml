@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "n3JLtVGMl9N3_9pR1_TqO"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "service app icon"
