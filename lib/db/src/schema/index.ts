@@ -102,6 +102,10 @@ export const serviceOrdersTable = pgTable("service_orders", {
   status: orderStatusEnum("status").notNull().default("pending"),
   preferredDate: text("preferred_date"),
   preferredTime: text("preferred_time"),
+  paymentMethod: text("payment_method"),
+  amountPaid: decimal("amount_paid", { precision: 10, scale: 2 })
+    .notNull()
+    .default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

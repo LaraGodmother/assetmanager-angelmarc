@@ -19,10 +19,14 @@ router.get("/orders", async (req, res) => {
         status: serviceOrdersTable.status,
         preferredDate: serviceOrdersTable.preferredDate,
         preferredTime: serviceOrdersTable.preferredTime,
+        paymentMethod: serviceOrdersTable.paymentMethod,
+        amountPaid: serviceOrdersTable.amountPaid,
         createdAt: serviceOrdersTable.createdAt,
         updatedAt: serviceOrdersTable.updatedAt,
         clientName: usersTable.name,
         serviceName: servicesTable.name,
+        serviceBasePrice: servicesTable.basePrice,
+        serviceProfitMargin: servicesTable.profitMargin,
       })
       .from(serviceOrdersTable)
       .leftJoin(usersTable, eq(serviceOrdersTable.clientId, usersTable.id))
@@ -61,12 +65,14 @@ router.post("/orders", async (req, res) => {
 
 router.patch("/orders/:id", async (req, res) => {
   try {
-    const { status, description } = req.body;
+    const { status, description, paymentMethod, amountPaid } = req.body;
     const [order] = await db
       .update(serviceOrdersTable)
       .set({
         ...(status !== undefined && { status }),
         ...(description !== undefined && { description }),
+        ...(paymentMethod !== undefined && { paymentMethod }),
+        ...(amountPaid !== undefined && { amountPaid: String(amountPaid) }),
         updatedAt: sql`now()`,
       })
       .where(eq(serviceOrdersTable.id, Number(req.params.id)))

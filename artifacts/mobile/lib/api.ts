@@ -100,7 +100,7 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  updateOrder: (id: number, data: Partial<{ status: string; description: string }>) =>
+  updateOrder: (id: number, data: Partial<{ status: string; description: string; paymentMethod: string; amountPaid: number }>) =>
     request<ApiOrder>(`/orders/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
@@ -201,8 +201,12 @@ export interface ApiOrder {
   status: "pending" | "in_progress" | "done" | "cancelled";
   preferredDate?: string | null;
   preferredTime?: string | null;
+  paymentMethod?: string | null;
+  amountPaid?: string | null;
   createdAt: string;
   updatedAt: string;
   clientName?: string | null;
   serviceName?: string | null;
+  serviceBasePrice?: string | null;
+  serviceProfitMargin?: string | null;
 }

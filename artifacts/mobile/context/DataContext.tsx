@@ -38,6 +38,8 @@ export interface ServiceOrder {
   status: ServiceStatus;
   preferredDate: string;
   preferredTime: string;
+  paymentMethod?: string;
+  amountPaid: number;
   createdAt: string;
   updatedAt: string;
   price: number;
@@ -126,8 +128,12 @@ const APPT_STATUS_REVERSE: Record<AppointmentStatus, ApiAppointment["status"]> =
 
 // ─── CONVERSORES ──────────────────────────────────────────────────────────────
 function mapOrder(o: ApiOrder): ServiceOrder {
-  const price = Number((o as any).price ?? 0);
-  const cost = Number((o as any).cost ?? 0);
+  const basePrice = Number(o.serviceBasePrice ?? 0);
+  const profitMarginPct = Number(o.serviceProfitMargin ?? 0);
+  const profit = basePrice * (profitMarginPct / 100);
+  const price = basePrice + profit;
+  const cost = basePrice;
+  const amountPaid = Number(o.amountPaid ?? 0);
   return {
     id: String(o.id),
     clientId: String(o.clientId),
@@ -138,11 +144,13 @@ function mapOrder(o: ApiOrder): ServiceOrder {
     status: ORDER_STATUS_MAP[o.status] ?? "pendente",
     preferredDate: o.preferredDate ?? "",
     preferredTime: o.preferredTime ?? "",
+    paymentMethod: o.paymentMethod ?? undefined,
+    amountPaid,
     createdAt: o.createdAt,
     updatedAt: o.updatedAt,
     price,
     cost,
-    profit: price - cost,
+    profit,
   };
 }
 

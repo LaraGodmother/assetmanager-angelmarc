@@ -1,0 +1,88 @@
+🚀 PROMPT PARA REPLIT – DASHBOARD FINANCEIRO COMPLETO
+
+Crie e melhore o dashboard financeiro do meu aplicativo de serviços (ERP simples), deixando ele moderno, completo e profissional.
+
+O dashboard deve conter as seguintes seções e funcionalidades:
+
+💰 1. RESUMO FINANCEIRO (CARDS PRINCIPAIS)
+
+No topo do dashboard exibir cards com:
+
+Faturamento total
+Lucro líquido
+Custo total
+Total recebido (pagamentos confirmados)
+Total a receber (pendente)
+Inadimplência (% de valores não pagos)
+💸 2. CUSTOS DETALHADOS
+
+Separar os custos em:
+
+Custo de materiais
+Custo de mão de obra (se aplicável)
+Custos operacionais (transporte, taxas, etc.)
+Custo total geral consolidado
+💳 3. FORMAS DE PAGAMENTO
+
+Registrar e exibir:
+
+Dinheiro
+Cartão de crédito
+Cartão de débito
+PIX
+Transferência bancária
+
+Criar gráficos para mostrar:
+
+Percentual por forma de pagamento
+Volume de recebimentos por método
+📊 4. GRÁFICOS DO DASHBOARD
+
+Adicionar visualizações modernas:
+
+Linha: faturamento mensal e lucro mensal
+Barras: serviços concluídos, em andamento e pendentes
+Pizza: formas de pagamento
+Barras: receita por tipo de serviço
+🧾 5. GESTÃO DE SERVIÇOS
+
+Melhorar o controle de serviços com:
+
+Status: concluído, em andamento, pendente
+Serviços atrasados
+Tempo médio de conclusão
+Serviços por dia/semana/mês
+Histórico recente de serviços
+👤 6. CLIENTES (CRM SIMPLES)
+
+Adicionar painel de clientes com:
+
+Total gasto por cliente
+Clientes ativos vs inativos
+Histórico de serviços por cliente
+Ticket médio por cliente
+Ranking de clientes que mais compram
+📦 7. MATERIAIS (OPCIONAL AVANÇADO)
+
+Se possível incluir:
+
+Controle de estoque de materiais
+Consumo de materiais por serviço
+Custo de materiais no mês
+Alerta de estoque baixo
+🔥 8. EXTRAS PROFISSIONAIS
+
+Adicionar melhorias de UX/UI:
+
+Cards de resumo rápido no topo
+Comparação mensal (mês atual vs anterior)
+Meta mensal de faturamento (% progresso)
+Alertas de pagamentos atrasados
+Serviços pendentes antigos destacados
+Design limpo, moderno e responsivo
+🎨 VISUAL DO DASHBOARD
+Layout moderno estilo ERP profissional
+Fundo limpo (branco ou azul claro)
+Componentes em cards com sombra leve
+Gráficos bem distribuídos e responsivos
+Interface organizada e fácil de entender
