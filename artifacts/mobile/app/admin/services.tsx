@@ -53,6 +53,7 @@ interface ServiceForm {
   name: string;
   description: string;
   basePrice: string;
+  profitMargin: string;
   rules: string;
   active: boolean;
 }
@@ -61,6 +62,7 @@ const EMPTY_FORM: ServiceForm = {
   name: "",
   description: "",
   basePrice: "",
+  profitMargin: "",
   rules: "",
   active: true,
 };
@@ -70,9 +72,19 @@ function serviceToForm(s: Service): ServiceForm {
     name: s.name,
     description: s.description,
     basePrice: s.basePrice > 0 ? String(s.basePrice) : "",
+    profitMargin: s.profitMargin > 0 ? String(s.profitMargin) : "",
     rules: s.rules ?? "",
     active: s.active,
   };
+}
+
+function calcProfit(basePriceStr: string, marginStr: string) {
+  const base = parseFloat(basePriceStr.replace(",", "."));
+  const margin = parseFloat(marginStr.replace(",", "."));
+  if (isNaN(base) || isNaN(margin) || base <= 0 || margin <= 0) return null;
+  const profit = base * (margin / 100);
+  const salePrice = base + profit;
+  return { profit, salePrice, margin };
 }
 
 // ─── MODAL DE SERVIÇO ─────────────────────────────────────────────────────────
@@ -84,6 +96,7 @@ interface ServiceModalProps {
     name: string;
     description: string;
     basePrice: number;
+    profitMargin?: number;
     rules?: string;
     active: boolean;
   }) => Promise<void>;
@@ -93,6 +106,7 @@ interface ServiceModalProps {
       name: string;
       description: string;
       basePrice: number;
+      profitMargin: number;
       rules: string;
       active: boolean;
     }>
@@ -136,6 +150,14 @@ function ServiceModal({
       Alert.alert("Valor inválido", "Informe um valor base válido (ex: 150,00).");
       return;
     }
+    const profitMarginNum =
+      form.profitMargin.trim()
+        ? parseFloat(form.profitMargin.replace(",", "."))
+        : 0;
+    if (isNaN(profitMarginNum) || profitMarginNum < 0 || profitMarginNum > 999) {
+      Alert.alert("Margem inválida", "Informe uma margem de lucro válida (ex: 30).");
+      return;
+    }
     setSaving(true);
     try {
       if (editing) {
@@ -143,6 +165,7 @@ function ServiceModal({
           name: form.name.trim(),
           description: form.description.trim(),
           basePrice,
+          profitMargin: profitMarginNum,
           rules: form.rules.trim() || undefined,
           active: form.active,
         } as any);
@@ -151,6 +174,7 @@ function ServiceModal({
           name: form.name.trim(),
           description: form.description.trim(),
           basePrice,
+          profitMargin: profitMarginNum,
           rules: form.rules.trim() || undefined,
           active: form.active,
         });
@@ -286,6 +310,100 @@ function ServiceModal({
                   keyboardType="decimal-pad"
                 />
               </View>
+
+              {/* Margem de Lucro */}
+              <View>
+                <Text style={[styles.label, { color: colors.foreground }]}>
+                  Margem de lucro (%){" "}
+                  <Text style={{ color: colors.mutedForeground, fontWeight: "400" }}>
+                    (opcional)
+                  </Text>
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                      color: colors.foreground,
+                    },
+                  ]}
+                  placeholder="Ex: 30"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={form.profitMargin}
+                  onChangeText={(v) => set("profitMargin", v)}
+                  keyboardType="decimal-pad"
+                />
+              </View>
+
+              {/* Calculadora de lucro */}
+              {(() => {
+                const result = calcProfit(form.basePrice, form.profitMargin);
+                if (!result) return null;
+                return (
+                  <View
+                    style={{
+                      borderRadius: 12,
+                      backgroundColor: "#f0fdf4",
+                      borderWidth: 1,
+                      borderColor: "#bbf7d0",
+                      padding: 14,
+                      gap: 10,
+                    }}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                      <Feather name="trending-up" size={14} color="#16a34a" />
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: "700",
+                          fontFamily: "Inter_700Bold",
+                          color: "#16a34a",
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        Cálculo de rentabilidade
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 8, padding: 10, alignItems: "center" }}>
+                        <Text style={{ fontSize: 11, color: "#64748b", fontFamily: "Inter_400Regular", marginBottom: 2 }}>
+                          Valor do serviço
+                        </Text>
+                        <Text style={{ fontSize: 15, fontWeight: "700", fontFamily: "Inter_700Bold", color: "#1e293b" }}>
+                          {fmt(parseFloat(form.basePrice.replace(",", ".")) || 0)}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 8, padding: 10, alignItems: "center" }}>
+                        <Text style={{ fontSize: 11, color: "#64748b", fontFamily: "Inter_400Regular", marginBottom: 2 }}>
+                          Você ganha
+                        </Text>
+                        <Text style={{ fontSize: 15, fontWeight: "700", fontFamily: "Inter_700Bold", color: "#16a34a" }}>
+                          {fmt(result.profit)}
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        backgroundColor: "#1565C0",
+                        borderRadius: 8,
+                        padding: 10,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, color: "#fff", fontFamily: "Inter_400Regular", opacity: 0.85 }}>
+                        Preço de venda sugerido
+                      </Text>
+                      <Text style={{ fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold", color: "#fff" }}>
+                        {fmt(result.salePrice)}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })()}
 
               {/* Regras / Observações */}
               <View>
@@ -452,7 +570,7 @@ function ServiceCatalogCard({
             >
               {service.description}
             </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
               <Feather name="dollar-sign" size={12} color={color} />
               <Text
                 style={{
@@ -464,19 +582,26 @@ function ServiceCatalogCard({
               >
                 {fmt(service.basePrice)}
               </Text>
-              {service.rules ? (
+              {service.profitMargin > 0 && (
                 <>
-                  <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: colors.border, marginHorizontal: 4 }} />
-                  <Feather name="info" size={11} color={colors.mutedForeground} />
+                  <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: colors.border, marginHorizontal: 2 }} />
+                  <Feather name="trending-up" size={11} color="#16a34a" />
                   <Text
                     style={{
                       fontSize: 11,
-                      color: colors.mutedForeground,
-                      fontFamily: "Inter_400Regular",
+                      color: "#16a34a",
+                      fontFamily: "Inter_600SemiBold",
+                      fontWeight: "600",
                     }}
                   >
-                    Regras definidas
+                    {service.profitMargin}% lucro · {fmt(service.basePrice * (service.profitMargin / 100))}
                   </Text>
+                </>
+              )}
+              {service.rules ? (
+                <>
+                  <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: colors.border, marginHorizontal: 2 }} />
+                  <Feather name="info" size={11} color={colors.mutedForeground} />
                 </>
               ) : null}
             </View>

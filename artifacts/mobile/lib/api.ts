@@ -111,6 +111,7 @@ export const api = {
     name: string;
     description: string;
     basePrice: number;
+    profitMargin?: number;
     rules?: string;
     active?: boolean;
   }) =>
@@ -125,6 +126,7 @@ export const api = {
       name: string;
       description: string;
       basePrice: number;
+      profitMargin: number;
       rules: string;
       active: boolean;
     }>
@@ -157,6 +159,7 @@ export interface ApiService {
   name: string;
   description: string;
   basePrice: string;
+  profitMargin: string;
   rules?: string | null;
   active: boolean;
   createdAt: string;

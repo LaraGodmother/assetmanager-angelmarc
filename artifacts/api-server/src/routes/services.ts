@@ -33,13 +33,20 @@ router.get("/services/:id", async (req, res) => {
 
 router.post("/services", async (req, res) => {
   try {
-    const { name, description, basePrice, rules, active } = req.body;
+    const { name, description, basePrice, profitMargin, rules, active } = req.body;
     if (!name || !description || basePrice == null) {
       return res.status(400).json({ error: "name, description e basePrice são obrigatórios." });
     }
     const [service] = await db
       .insert(servicesTable)
-      .values({ name, description, basePrice: String(basePrice), rules, active: active ?? true })
+      .values({
+        name,
+        description,
+        basePrice: String(basePrice),
+        profitMargin: profitMargin != null ? String(profitMargin) : "0",
+        rules,
+        active: active ?? true,
+      })
       .returning();
     return res.status(201).json(service);
   } catch {
@@ -49,13 +56,14 @@ router.post("/services", async (req, res) => {
 
 router.patch("/services/:id", async (req, res) => {
   try {
-    const { name, description, basePrice, rules, active } = req.body;
+    const { name, description, basePrice, profitMargin, rules, active } = req.body;
     const [service] = await db
       .update(servicesTable)
       .set({
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
         ...(basePrice !== undefined && { basePrice: String(basePrice) }),
+        ...(profitMargin !== undefined && { profitMargin: String(profitMargin) }),
         ...(rules !== undefined && { rules }),
         ...(active !== undefined && { active }),
       })

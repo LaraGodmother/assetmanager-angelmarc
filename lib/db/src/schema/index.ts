@@ -48,6 +48,9 @@ export const servicesTable = pgTable("services", {
   name: text("name").notNull(),
   description: text("description").notNull(),
   basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
+  profitMargin: decimal("profit_margin", { precision: 5, scale: 2 })
+    .notNull()
+    .default("0"),
   rules: text("rules"),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),

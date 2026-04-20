@@ -77,6 +77,7 @@ export interface Service {
   name: string;
   description: string;
   basePrice: number;
+  profitMargin: number;
   rules?: string;
   active: boolean;
 }
@@ -187,6 +188,7 @@ function mapService(s: ApiService): Service {
     name: s.name,
     description: s.description,
     basePrice: Number(s.basePrice) || 0,
+    profitMargin: Number(s.profitMargin) || 0,
     rules: s.rules ?? undefined,
     active: s.active,
   };
@@ -240,6 +242,7 @@ interface DataContextType {
     name: string;
     description: string;
     basePrice: number;
+    profitMargin?: number;
     rules?: string;
     active?: boolean;
   }) => Promise<Service>;
@@ -249,6 +252,7 @@ interface DataContextType {
       name: string;
       description: string;
       basePrice: number;
+      profitMargin: number;
       rules: string;
       active: boolean;
     }>
