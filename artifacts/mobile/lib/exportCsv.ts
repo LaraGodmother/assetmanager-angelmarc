@@ -44,23 +44,28 @@ export async function openExportUrl(path: string): Promise<void> {
     }
 
     // ── MOBILE ───────────────────────────────────────────────────────────────
+    const res = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    if (!res.ok) {
+      Alert.alert("Erro ao exportar", `Servidor retornou ${res.status}.`);
+      return;
+    }
+
+    const csvText = await res.text();
     const cacheDir = FileSystem.cacheDirectory ?? "";
     const today = new Date().toISOString().slice(0, 10);
     const slugPath = path.replace(/[^a-z0-9]/gi, "_");
     const fileUri = `${cacheDir}export_${slugPath}_${today}.csv`;
 
-    const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    await FileSystem.writeAsStringAsync(fileUri, csvText, {
+      encoding: FileSystem.EncodingType.UTF8,
     });
-
-    if (downloadResult.status !== 200) {
-      Alert.alert("Erro ao exportar", `Servidor retornou ${downloadResult.status}.`);
-      return;
-    }
 
     const canShare = await Sharing.isAvailableAsync();
     if (canShare) {
-      await Sharing.shareAsync(downloadResult.uri, {
+      await Sharing.shareAsync(fileUri, {
         mimeType: "text/csv",
         dialogTitle: "Compartilhar planilha",
         UTI: "public.comma-separated-values-text",
@@ -68,7 +73,7 @@ export async function openExportUrl(path: string): Promise<void> {
       return;
     }
 
-    await Share.share({ url: downloadResult.uri, title: "Exportação CSV" });
+    await Share.share({ url: fileUri, title: "Exportação CSV" });
   } catch (e: any) {
     console.error("[openExportUrl] erro:", e);
     Alert.alert("Erro ao exportar", e?.message ?? "Tente novamente.");
