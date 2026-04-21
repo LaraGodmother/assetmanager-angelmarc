@@ -1,6 +1,7 @@
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import { Linking, Alert, Platform, Share } from "react-native";
+import { Alert, Platform, Share } from "react-native";
+import { getAuthToken } from "@/lib/api";
 
 // ── BASE URL (same logic as api.ts) ──────────────────────────────────────────
 const BASE_URL =
@@ -8,20 +9,68 @@ const BASE_URL =
   "https://0c4f309c-6b3c-4e2f-96e4-8aadfecef50e-00-3gjzlqu4remhq.picard.replit.dev/api";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// openExportUrl — Opens a server-side CSV export URL in the system browser.
-// This is the most reliable approach for Expo Go (no native module limitations).
-// The browser will download or preview the CSV as a proper document.
+// openExportUrl — Downloads a server-side CSV using the JWT auth token.
+// Web: triggers browser download via a blob URL.
+// Mobile: saves to cache and opens native share sheet.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function openExportUrl(path: string): Promise<void> {
   const url = BASE_URL.replace(/\/api$/, "") + "/api" + path;
+  const token = getAuthToken();
+
   try {
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
-      Alert.alert("Erro", "Não foi possível abrir o navegador para baixar o arquivo.");
+    // ── WEB ──────────────────────────────────────────────────────────────────
+    if (Platform.OS === "web") {
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        Alert.alert("Erro ao exportar", `Servidor retornou ${res.status}. Tente novamente.`);
+        return;
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") ?? "";
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      const filename = match?.[1] ?? "exportacao.csv";
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = filename;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+      return;
     }
+
+    // ── MOBILE ───────────────────────────────────────────────────────────────
+    const cacheDir = FileSystem.cacheDirectory ?? "";
+    const today = new Date().toISOString().slice(0, 10);
+    const slugPath = path.replace(/[^a-z0-9]/gi, "_");
+    const fileUri = `${cacheDir}export_${slugPath}_${today}.csv`;
+
+    const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    if (downloadResult.status !== 200) {
+      Alert.alert("Erro ao exportar", `Servidor retornou ${downloadResult.status}.`);
+      return;
+    }
+
+    const canShare = await Sharing.isAvailableAsync();
+    if (canShare) {
+      await Sharing.shareAsync(downloadResult.uri, {
+        mimeType: "text/csv",
+        dialogTitle: "Compartilhar planilha",
+        UTI: "public.comma-separated-values-text",
+      });
+      return;
+    }
+
+    await Share.share({ url: downloadResult.uri, title: "Exportação CSV" });
   } catch (e: any) {
+    console.error("[openExportUrl] erro:", e);
     Alert.alert("Erro ao exportar", e?.message ?? "Tente novamente.");
   }
 }
