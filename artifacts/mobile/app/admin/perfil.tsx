@@ -81,7 +81,7 @@ export default function PerfilScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="arrow-left" size={22} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.primary }]}>Meu Perfil</Text>
+        <Text style={[styles.headerTitle, { color: colors.primary }]}>Configurações</Text>
         <View style={{ width: 40 }} />
       </View>
 

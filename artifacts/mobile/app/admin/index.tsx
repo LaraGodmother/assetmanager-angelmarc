@@ -33,6 +33,7 @@ const ADMIN_MENU = [
   { icon: "clipboard" as const, label: "Ordens", route: "/admin/orders", color: "#2E7D32" },
   { icon: "calendar" as const, label: "Calendário", route: "/admin/calendar", color: "#C62828" },
   { icon: "dollar-sign" as const, label: "Financeiro", route: "/admin/financeiro", color: "#00796B" },
+  { icon: "settings" as const, label: "Configurações", route: "/admin/perfil", color: "#455A64" },
 ];
 
 export default function AdminDashboard() {
