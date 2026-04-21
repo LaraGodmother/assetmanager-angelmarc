@@ -15,6 +15,7 @@ const budgetWithDetails = async (clientId?: number) => {
       profitMargin: budgetsTable.profitMargin,
       finalValue: budgetsTable.finalValue,
       observations: budgetsTable.observations,
+      paymentConditions: budgetsTable.paymentConditions,
       status: budgetsTable.status,
       createdAt: budgetsTable.createdAt,
       clientName: usersTable.name,
@@ -83,7 +84,7 @@ router.post("/budgets", async (req, res) => {
 
 router.patch("/budgets/:id", async (req, res) => {
   try {
-    const { status, baseValue, profitMargin, finalValue, observations } = req.body;
+    const { status, baseValue, profitMargin, finalValue, observations, paymentConditions } = req.body;
 
     let computedFinal = finalValue;
     if (baseValue !== undefined && profitMargin !== undefined) {
@@ -100,6 +101,7 @@ router.patch("/budgets/:id", async (req, res) => {
         ...(profitMargin !== undefined && { profitMargin: String(profitMargin) }),
         ...(computedFinal !== undefined && { finalValue: String(computedFinal) }),
         ...(observations !== undefined && { observations }),
+        ...(paymentConditions !== undefined && { paymentConditions }),
       })
       .where(eq(budgetsTable.id, Number(req.params.id)))
       .returning();

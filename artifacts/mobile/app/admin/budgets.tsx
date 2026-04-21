@@ -53,6 +53,7 @@ export default function AdminBudgetsScreen() {
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState(false);
+  const [selectedPayments, setSelectedPayments] = useState<string[]>([]);
 
   async function handleExport() {
     setExporting(true);
@@ -92,7 +93,10 @@ export default function AdminBudgetsScreen() {
   function openBudget(budget: Budget) {
     setSelectedBudget(budget);
     setValueInput(budget.value ? String(budget.value) : "");
-    setNotes(budget.notes ?? "");
+    setNotes(budget.observations ?? "");
+    setSelectedPayments(
+      budget.paymentConditions ? budget.paymentConditions.split(",").filter(Boolean) : []
+    );
     setShowModal(true);
   }
 
@@ -104,7 +108,12 @@ export default function AdminBudgetsScreen() {
     if (!selectedBudget) return;
     setSaving(true);
     try {
-      await saveBudgetEdits(selectedBudget.id, parsedValue(), notes || undefined);
+      await saveBudgetEdits(
+        selectedBudget.id,
+        parsedValue(),
+        notes || undefined,
+        selectedPayments.length > 0 ? selectedPayments.join(",") : ""
+      );
       setSaveFeedback(true);
       setTimeout(() => setSaveFeedback(false), 2000);
     } finally {
@@ -412,6 +421,62 @@ export default function AdminBudgetsScreen() {
                 }}
                 placeholderTextColor={colors.mutedForeground}
               />
+
+              {/* Condições de Pagamento */}
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "500",
+                  fontFamily: "Inter_500Medium",
+                  color: colors.mutedForeground,
+                  marginBottom: 8,
+                }}
+              >
+                Condições de Pagamento
+              </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
+                {(
+                  [
+                    { key: "pix", label: "PIX", icon: "zap" },
+                    { key: "debit", label: "Cartão de Débito", icon: "credit-card" },
+                    { key: "credit", label: "Parcel. Crédito", icon: "layers" },
+                  ] as const
+                ).map(({ key, label, icon }) => {
+                  const active = selectedPayments.includes(key);
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      onPress={() =>
+                        setSelectedPayments((prev) =>
+                          active ? prev.filter((k) => k !== key) : [...prev, key]
+                        )
+                      }
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 6,
+                        paddingHorizontal: 14,
+                        paddingVertical: 9,
+                        borderRadius: 24,
+                        borderWidth: 1.5,
+                        borderColor: active ? colors.primary : colors.border,
+                        backgroundColor: active ? "#EFF6FF" : colors.muted,
+                      }}
+                    >
+                      <Feather name={icon} size={13} color={active ? colors.primary : colors.mutedForeground} />
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontFamily: active ? "Inter_600SemiBold" : "Inter_400Regular",
+                          color: active ? colors.primary : colors.mutedForeground,
+                        }}
+                      >
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
               {/* Observações / Itens */}
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>

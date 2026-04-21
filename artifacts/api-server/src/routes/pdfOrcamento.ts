@@ -86,6 +86,7 @@ router.get("/orcamentos/:id/pdf", async (req, res) => {
         profitMargin: budgetsTable.profitMargin,
         finalValue: budgetsTable.finalValue,
         observations: budgetsTable.observations,
+        paymentConditions: budgetsTable.paymentConditions,
         status: budgetsTable.status,
         createdAt: budgetsTable.createdAt,
         clientName: usersTable.name,
@@ -274,6 +275,49 @@ router.get("/orcamentos/:id/pdf", async (req, res) => {
     doc.text(fmtBrl(grandTotal), TX + 100, Y + 42, { width: 90, align: "right" });
 
     Y += 90;
+
+    // ── PAYMENT CONDITIONS ────────────────────────────────────────────────────
+    const paymentKeys = (row.paymentConditions ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (paymentKeys.length > 0) {
+      const PAYMENT_LABELS: Record<string, string> = {
+        pix: "PIX",
+        debit: "Cartão de Débito",
+        credit: "Parcelamento no Crédito",
+      };
+
+      doc
+        .fillColor(BRAND_BLUE)
+        .font("Helvetica-Bold")
+        .fontSize(11)
+        .text("CONDIÇÕES DE PAGAMENTO", MARGIN, Y);
+
+      Y += 16;
+      doc.rect(MARGIN, Y, COL, 0.5).fill("#E3F2FD");
+      Y += 10;
+
+      const chipW = 160;
+      const chipH = 26;
+      const chipGap = 10;
+      let chipX = MARGIN;
+
+      paymentKeys.forEach((key) => {
+        const label = PAYMENT_LABELS[key] ?? key;
+        doc.roundedRect(chipX, Y, chipW, chipH, 4).fill("#EFF6FF");
+        doc.roundedRect(chipX, Y, chipW, chipH, 4).stroke(BRAND_BLUE);
+        doc
+          .fillColor(BRAND_BLUE)
+          .font("Helvetica-Bold")
+          .fontSize(9)
+          .text(label, chipX + 8, Y + 8, { width: chipW - 16, align: "center" });
+        chipX += chipW + chipGap;
+      });
+
+      Y += chipH + 20;
+    }
 
     // ── OBSERVATIONS ─────────────────────────────────────────────────────────
     doc

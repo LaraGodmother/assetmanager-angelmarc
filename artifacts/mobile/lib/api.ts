@@ -52,7 +52,7 @@ export const api = {
 
   updateBudget: (
     id: number,
-    data: Partial<{ status: string; baseValue: number; profitMargin: number; finalValue: number; observations: string }>
+    data: Partial<{ status: string; baseValue: number; profitMargin: number; finalValue: number; observations: string; paymentConditions: string }>
   ) =>
     request<ApiBudget>(`/budgets/${id}`, {
       method: "PATCH",
@@ -193,6 +193,7 @@ export interface ApiBudget {
   profitMargin: string;
   finalValue: string;
   observations?: string | null;
+  paymentConditions?: string | null;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
   clientName?: string | null;

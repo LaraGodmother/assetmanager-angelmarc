@@ -72,6 +72,7 @@ export const budgetsTable = pgTable("budgets", {
     .default("0"),
   finalValue: decimal("final_value", { precision: 10, scale: 2 }).notNull(),
   observations: text("observations"),
+  paymentConditions: text("payment_conditions"),
   status: budgetStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
