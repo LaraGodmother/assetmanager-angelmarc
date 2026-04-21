@@ -41,7 +41,7 @@ const FILTER_LABELS: Record<string, string> = {
 export default function AdminBudgetsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { budgets, updateBudgetStatus } = useData();
+  const { budgets, updateBudgetStatus, saveBudgetEdits } = useData();
 
   const topInset = Platform.OS === "web" ? 67 : insets.top;
   const [filter, setFilter] = useState("Todos");
@@ -51,6 +51,8 @@ export default function AdminBudgetsScreen() {
   const [notes, setNotes] = useState("");
   const [exporting, setExporting] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState(false);
 
   async function handleExport() {
     setExporting(true);
@@ -94,12 +96,32 @@ export default function AdminBudgetsScreen() {
     setShowModal(true);
   }
 
+  function parsedValue() {
+    return valueInput ? parseFloat(valueInput.replace(",", ".")) : undefined;
+  }
+
+  async function handleSave() {
+    if (!selectedBudget) return;
+    setSaving(true);
+    try {
+      await saveBudgetEdits(selectedBudget.id, parsedValue(), notes || undefined);
+      setSaveFeedback(true);
+      setTimeout(() => setSaveFeedback(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function updateStatus(status: BudgetStatus) {
     if (!selectedBudget) return;
-    const value = valueInput ? parseFloat(valueInput.replace(",", ".")) : undefined;
-    await updateBudgetStatus(selectedBudget.id, status, value, notes || undefined);
-    setShowModal(false);
-    setSelectedBudget(null);
+    setSaving(true);
+    try {
+      await updateBudgetStatus(selectedBudget.id, status, parsedValue(), notes || undefined);
+      setShowModal(false);
+      setSelectedBudget(null);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -226,7 +248,7 @@ export default function AdminBudgetsScreen() {
               contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
             >
               {/* Header row with close button */}
-              <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 4 }}>
+              <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 6 }}>
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
@@ -234,7 +256,7 @@ export default function AdminBudgetsScreen() {
                       fontWeight: "700",
                       fontFamily: "Inter_700Bold",
                       color: colors.foreground,
-                      marginBottom: 4,
+                      marginBottom: 3,
                     }}
                   >
                     {selectedBudget?.serviceType}
@@ -244,7 +266,6 @@ export default function AdminBudgetsScreen() {
                       fontSize: 13,
                       color: colors.mutedForeground,
                       fontFamily: "Inter_400Regular",
-                      marginBottom: 4,
                     }}
                   >
                     Cliente: {selectedBudget?.clientName}
@@ -265,6 +286,34 @@ export default function AdminBudgetsScreen() {
                   <Feather name="x" size={18} color={colors.mutedForeground} />
                 </TouchableOpacity>
               </View>
+
+              {/* Status badge */}
+              {selectedBudget && (
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground, fontFamily: "Inter_400Regular", marginRight: 8 }}>
+                    Status atual:
+                  </Text>
+                  <View style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 4,
+                    borderRadius: 20,
+                    backgroundColor:
+                      selectedBudget.status === "aprovado" ? "#dcfce7" :
+                      selectedBudget.status === "recusado" ? "#fee2e2" : "#FFF3E0",
+                  }}>
+                    <Text style={{
+                      fontSize: 12,
+                      fontFamily: "Inter_600SemiBold",
+                      color:
+                        selectedBudget.status === "aprovado" ? "#166534" :
+                        selectedBudget.status === "recusado" ? "#991b1b" : "#B45309",
+                    }}>
+                      {selectedBudget.status === "aprovado" ? "Aprovado" :
+                       selectedBudget.status === "recusado" ? "Recusado" : "Aguardando"}
+                    </Text>
+                  </View>
+                </View>
+              )}
 
               <Text
                 style={{
@@ -418,45 +467,100 @@ export default function AdminBudgetsScreen() {
                 placeholderTextColor={colors.mutedForeground}
               />
 
-              <View style={{ flexDirection: "row", gap: 10 }}>
+              {/* Save edits button */}
+              <TouchableOpacity
+                onPress={handleSave}
+                disabled={saving}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  padding: 14,
+                  borderRadius: 10,
+                  backgroundColor: saveFeedback ? "#dcfce7" : colors.primary,
+                  marginBottom: 12,
+                }}
+              >
+                {saving ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : saveFeedback ? (
+                  <Feather name="check-circle" size={17} color="#166534" />
+                ) : (
+                  <Feather name="save" size={17} color="#fff" />
+                )}
+                <Text style={{
+                  fontFamily: "Inter_600SemiBold",
+                  fontSize: 14,
+                  color: saveFeedback ? "#166534" : "#fff",
+                }}>
+                  {saveFeedback ? "Salvo!" : "Salvar Alterações"}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Separator */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, fontFamily: "Inter_400Regular" }}>
+                  Alterar status
+                </Text>
+                <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+              </View>
+
+              {/* Status buttons */}
+              <View style={{ flexDirection: "row", gap: 8 }}>
                 <TouchableOpacity
-                  onPress={() => updateStatus("recusado")}
+                  onPress={() => updateStatus("aguardando")}
+                  disabled={saving}
                   style={{
                     flex: 1,
-                    padding: 14,
+                    padding: 12,
                     borderRadius: 10,
-                    backgroundColor: "#fee2e2",
+                    backgroundColor: "#FFF3E0",
                     alignItems: "center",
+                    borderWidth: 1.5,
+                    borderColor: "#FED7AA",
                   }}
                 >
-                  <Text
-                    style={{
-                      color: "#991b1b",
-                      fontFamily: "Inter_600SemiBold",
-                      fontSize: 14,
-                    }}
-                  >
-                    Recusar
+                  <Feather name="clock" size={14} color="#B45309" style={{ marginBottom: 3 }} />
+                  <Text style={{ color: "#B45309", fontFamily: "Inter_600SemiBold", fontSize: 12 }}>
+                    Pendente
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => updateStatus("aprovado")}
+                  disabled={saving}
                   style={{
                     flex: 1,
-                    padding: 14,
+                    padding: 12,
                     borderRadius: 10,
                     backgroundColor: "#dcfce7",
                     alignItems: "center",
+                    borderWidth: 1.5,
+                    borderColor: "#BBF7D0",
                   }}
                 >
-                  <Text
-                    style={{
-                      color: "#166534",
-                      fontFamily: "Inter_600SemiBold",
-                      fontSize: 14,
-                    }}
-                  >
+                  <Feather name="check-circle" size={14} color="#166534" style={{ marginBottom: 3 }} />
+                  <Text style={{ color: "#166534", fontFamily: "Inter_600SemiBold", fontSize: 12 }}>
                     Aprovar
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => updateStatus("recusado")}
+                  disabled={saving}
+                  style={{
+                    flex: 1,
+                    padding: 12,
+                    borderRadius: 10,
+                    backgroundColor: "#fee2e2",
+                    alignItems: "center",
+                    borderWidth: 1.5,
+                    borderColor: "#FECACA",
+                  }}
+                >
+                  <Feather name="x-circle" size={14} color="#991b1b" style={{ marginBottom: 3 }} />
+                  <Text style={{ color: "#991b1b", fontFamily: "Inter_600SemiBold", fontSize: 12 }}>
+                    Recusar
                   </Text>
                 </TouchableOpacity>
               </View>

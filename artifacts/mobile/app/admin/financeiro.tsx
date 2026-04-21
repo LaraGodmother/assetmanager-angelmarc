@@ -25,6 +25,35 @@ function pct(v: number) {
   return `${v.toFixed(1)}%`;
 }
 
+// ─── CONSTANTS (module-level — required for React Compiler) ───────────────────
+const PAYMENT_LABELS: Record<string, string> = {
+  pix: "PIX",
+  cash: "Dinheiro",
+  credit_card: "Cartão de Crédito",
+  debit_card: "Cartão de Débito",
+  transfer: "Transferência",
+  "Não informado": "Não informado",
+};
+const PAYMENT_COLORS = ["#1565C0", "#F57C00", "#22c55e", "#8b5cf6", "#06b6d4", "#94a3b8"];
+const STATUS_COLOR: Record<string, string> = {
+  concluido: "#22c55e",
+  em_andamento: "#3b82f6",
+  pendente: "#f59e0b",
+  cancelado: "#ef4444",
+};
+const STATUS_LABEL: Record<string, string> = {
+  concluido: "Concluído",
+  em_andamento: "Em andamento",
+  pendente: "Pendente",
+  cancelado: "Cancelado",
+};
+const PERIOD_LABEL: Record<string, string> = {
+  mes: "Mês Atual",
+  trimestre: "Trimestre",
+  ano: "Ano",
+  total: "Todo o período",
+};
+
 // ─── BAR CHART SIMPLES ────────────────────────────────────────────────────────
 function HorizontalBar({
   label,
@@ -248,16 +277,6 @@ export default function FinanceiroScreen() {
       }));
   }, [filteredOrders]);
 
-  const PAYMENT_LABELS: Record<string, string> = {
-    pix: "PIX",
-    cash: "Dinheiro",
-    credit_card: "Cartão de Crédito",
-    debit_card: "Cartão de Débito",
-    transfer: "Transferência",
-    "Não informado": "Não informado",
-  };
-
-  const PAYMENT_COLORS = ["#1565C0", "#F57C00", "#22c55e", "#8b5cf6", "#06b6d4", "#94a3b8"];
 
   // ── Pedidos recentes ──────────────────────────────────────────────────────
   const recentOrders = useMemo(
@@ -268,24 +287,10 @@ export default function FinanceiroScreen() {
     [filteredOrders]
   );
 
-  const STATUS_COLOR: Record<string, string> = {
-    concluido: "#22c55e",
-    em_andamento: "#3b82f6",
-    pendente: "#f59e0b",
-    cancelado: "#ef4444",
-  };
-  const STATUS_LABEL: Record<string, string> = {
-    concluido: "Concluído",
-    em_andamento: "Em andamento",
-    pendente: "Pendente",
-    cancelado: "Cancelado",
-  };
-
   const maxServiceRevenue = byServiceType[0]?.[1] ?? 1;
   const maxClientRevenue = topClients[0]?.total ?? 1;
   const maxStatus = Math.max(orderStatus.concluidos, orderStatus.emAndamento, orderStatus.pendentes, orderStatus.cancelados, 1);
 
-  const PERIOD_LABEL: Record<string, string> = { mes: "Mês Atual", trimestre: "Trimestre", ano: "Ano", total: "Todo o período" };
 
   async function handleExport() {
     setExporting(true);

@@ -52,7 +52,7 @@ export const api = {
 
   updateBudget: (
     id: number,
-    data: Partial<{ status: string; baseValue: number; profitMargin: number; observations: string }>
+    data: Partial<{ status: string; baseValue: number; profitMargin: number; finalValue: number; observations: string }>
   ) =>
     request<ApiBudget>(`/budgets/${id}`, {
       method: "PATCH",

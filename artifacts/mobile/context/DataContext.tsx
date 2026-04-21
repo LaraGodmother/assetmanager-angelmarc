@@ -234,7 +234,8 @@ interface DataContextType {
     preferredTime?: string;
   }) => Promise<ServiceOrder>;
 
-  updateBudgetStatus: (id: string, status: BudgetStatus) => Promise<void>;
+  updateBudgetStatus: (id: string, status: BudgetStatus, finalValue?: number, notes?: string) => Promise<void>;
+  saveBudgetEdits: (id: string, finalValue?: number, notes?: string) => Promise<void>;
   createBudget: (data: {
     clientId: number;
     serviceId: number;
@@ -377,9 +378,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // ── Operações de Orçamentos ────────────────────────────────────────────
   const updateBudgetStatus = useCallback(
-    async (id: string, status: BudgetStatus) => {
+    async (id: string, status: BudgetStatus, finalValue?: number, notes?: string) => {
       const updated = await api.updateBudget(Number(id), {
         status: BUDGET_STATUS_REVERSE[status],
+        ...(finalValue !== undefined && { finalValue }),
+        ...(notes !== undefined && { observations: notes }),
+      });
+      setBudgets((prev) =>
+        prev.map((b) => (b.id === id ? mapBudget(updated) : b))
+      );
+    },
+    []
+  );
+
+  const saveBudgetEdits = useCallback(
+    async (id: string, finalValue?: number, notes?: string) => {
+      const updated = await api.updateBudget(Number(id), {
+        ...(finalValue !== undefined && { finalValue }),
+        ...(notes !== undefined && { observations: notes }),
       });
       setBudgets((prev) =>
         prev.map((b) => (b.id === id ? mapBudget(updated) : b))
@@ -557,6 +573,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         createOrder,
         createServiceOrder,
         updateBudgetStatus,
+        saveBudgetEdits,
         createBudget,
         createBudgetRequest,
         updateAppointmentStatus,
