@@ -2,12 +2,19 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
-import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import { generateToken } from "../middleware/auth";
 
 const router = Router();
+const SALT_ROUNDS = 12;
 
-function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
+async function verifyPassword(plain: string, stored: string): Promise<boolean> {
+  if (stored.startsWith("$2b$") || stored.startsWith("$2a$")) {
+    return bcrypt.compare(plain, stored);
+  }
+  const { createHash } = await import("crypto");
+  const sha = createHash("sha256").update(plain).digest("hex");
+  return sha === stored;
 }
 
 router.post("/auth/register", async (req, res) => {
@@ -27,12 +34,14 @@ router.post("/auth/register", async (req, res) => {
       return res.status(409).json({ error: "E-mail já cadastrado." });
     }
 
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
     const [user] = await db
       .insert(usersTable)
       .values({
         name,
         email: email.toLowerCase(),
-        passwordHash: hashPassword(password),
+        passwordHash,
         role: "client",
         phone: phone ?? null,
       })
@@ -45,7 +54,8 @@ router.post("/auth/register", async (req, res) => {
         createdAt: usersTable.createdAt,
       });
 
-    return res.status(201).json({ user });
+    const token = generateToken({ userId: user.id, role: user.role });
+    return res.status(201).json({ user, token });
   } catch (err) {
     return res.status(500).json({ error: "Erro interno." });
   }
@@ -64,12 +74,26 @@ router.post("/auth/login", async (req, res) => {
       .where(eq(usersTable.email, email.toLowerCase()))
       .limit(1);
 
-    if (!user || user.passwordHash !== hashPassword(password)) {
+    if (!user) {
       return res.status(401).json({ error: "E-mail ou senha incorretos." });
     }
 
+    const valid = await verifyPassword(password, user.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: "E-mail ou senha incorretos." });
+    }
+
+    if (!user.passwordHash.startsWith("$2b$") && !user.passwordHash.startsWith("$2a$")) {
+      const upgraded = await bcrypt.hash(password, SALT_ROUNDS);
+      await db
+        .update(usersTable)
+        .set({ passwordHash: upgraded })
+        .where(eq(usersTable.id, user.id));
+    }
+
     const { passwordHash: _h, ...safeUser } = user;
-    return res.json({ user: safeUser });
+    const token = generateToken({ userId: user.id, role: user.role });
+    return res.json({ user: safeUser, token });
   } catch (err) {
     return res.status(500).json({ error: "Erro interno." });
   }

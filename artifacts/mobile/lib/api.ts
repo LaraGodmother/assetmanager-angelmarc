@@ -2,13 +2,24 @@ const BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
   "https://0c4f309c-6b3c-4e2f-96e4-8aadfecef50e-00-3gjzlqu4remhq.picard.replit.dev/api";
 
+let _authToken: string | null = null;
+
+export function setAuthToken(token: string | null) {
+  _authToken = token;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+    ...(_authToken ? { Authorization: `Bearer ${_authToken}` } : {}),
+  };
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...options.headers },
     ...options,
+    headers,
   });
   const data = await res.json();
   if (!res.ok) {
@@ -20,13 +31,13 @@ async function request<T>(
 export const api = {
   // Auth
   login: (email: string, password: string) =>
-    request<{ user: ApiUser }>("/auth/login", {
+    request<{ user: ApiUser; token: string }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
 
   register: (name: string, email: string, password: string, phone?: string) =>
-    request<{ user: ApiUser }>("/auth/register", {
+    request<{ user: ApiUser; token: string }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({ name, email, password, phone }),
     }),

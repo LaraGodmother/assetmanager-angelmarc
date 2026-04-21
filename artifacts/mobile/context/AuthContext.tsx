@@ -6,7 +6,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { api, type ApiUser } from "@/lib/api";
+import { api, setAuthToken, type ApiUser } from "@/lib/api";
 
 export type UserRole = "admin" | "client";
 
@@ -35,7 +35,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-const STORAGE_KEY = "@servcontrol_user";
+const STORAGE_KEY = "@servcontrol_session";
 
 function apiUserToUser(u: ApiUser): User {
   return {
@@ -56,7 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
-        if (stored) setUser(JSON.parse(stored));
+        if (stored) {
+          const { user: u, token } = JSON.parse(stored) as { user: User; token: string };
+          if (u) setUser(u);
+          if (token) setAuthToken(token);
+        }
       } catch {}
       finally {
         setIsLoading(false);
@@ -67,10 +71,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(
     async (email: string, password: string): Promise<{ success: boolean; role?: UserRole; error?: string }> => {
       try {
-        const { user: apiUser } = await api.login(email, password);
+        const { user: apiUser, token } = await api.login(email, password);
         const u = apiUserToUser(apiUser);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ user: u, token }));
         setUser(u);
+        setAuthToken(token);
         return { success: true, role: u.role };
       } catch (err: any) {
         return { success: false, error: err?.message ?? "Erro ao fazer login." };
@@ -87,10 +92,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phone?: string
     ): Promise<{ success: boolean; error?: string }> => {
       try {
-        const { user: apiUser } = await api.register(name, email, password, phone);
+        const { user: apiUser, token } = await api.register(name, email, password, phone);
         const u = apiUserToUser(apiUser);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ user: u, token }));
         setUser(u);
+        setAuthToken(token);
         return { success: true };
       } catch (err: any) {
         return { success: false, error: err?.message ?? "Erro ao criar conta." };
@@ -102,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     await AsyncStorage.removeItem(STORAGE_KEY);
     setUser(null);
+    setAuthToken(null);
   }, []);
 
   const recoverPassword = useCallback(

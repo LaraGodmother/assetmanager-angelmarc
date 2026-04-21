@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { requireAuth } from "../middleware/auth";
 import healthRouter from "./health";
 import authRouter from "./auth";
 import servicesRouter from "./services";
@@ -11,6 +12,8 @@ import pdfOrcamentoRouter from "./pdfOrcamento";
 import calendarNotesRouter from "./calendarNotes";
 
 const router: IRouter = Router();
+
+router.use(requireAuth);
 
 router.use(healthRouter);
 router.use(authRouter);

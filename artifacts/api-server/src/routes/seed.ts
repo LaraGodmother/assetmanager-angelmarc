@@ -1,11 +1,7 @@
 import { db } from "@workspace/db";
 import { servicesTable, usersTable } from "@workspace/db/schema";
-import { sql } from "drizzle-orm";
-import crypto from "crypto";
-
-function hash(p: string) {
-  return crypto.createHash("sha256").update(p).digest("hex");
-}
+import { sql, eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export async function seedDatabase() {
   try {
@@ -59,14 +55,26 @@ export async function seedDatabase() {
       .from(usersTable);
 
     if (Number(existingAdmin[0].count) === 0) {
+      const passwordHash = await bcrypt.hash("admin123", 12);
       await db.insert(usersTable).values({
         name: "Administrador",
         email: "admin@servcontrol.com",
-        passwordHash: hash("admin123"),
+        passwordHash,
         role: "admin",
         phone: "(11) 99999-9999",
       });
       console.log("✅ Admin inserido com seed.");
+    } else {
+      const [admin] = await db
+        .select({ id: usersTable.id, hash: usersTable.passwordHash })
+        .from(usersTable)
+        .where(eq(usersTable.email, "admin@servcontrol.com"))
+        .limit(1);
+      if (admin && !admin.hash.startsWith("$2b$") && !admin.hash.startsWith("$2a$")) {
+        const upgraded = await bcrypt.hash("admin123", 12);
+        await db.update(usersTable).set({ passwordHash: upgraded }).where(eq(usersTable.id, admin.id));
+        console.log("✅ Senha do admin migrada para bcrypt.");
+      }
     }
   } catch (err) {
     console.error("Seed error:", err);
