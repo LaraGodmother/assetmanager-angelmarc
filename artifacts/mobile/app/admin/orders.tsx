@@ -10,7 +10,7 @@ import {
   View,
   TextInput,
 } from "react-native";
-import { exportAndShare, fmtDate, fmtBrl } from "@/lib/exportCsv";
+import { openExportUrl } from "@/lib/exportCsv";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -60,19 +60,7 @@ export default function AdminOrdersScreen() {
   async function handleExport() {
     setExporting(true);
     try {
-      const headers = [
-        "ID", "Título", "Descrição", "Status", "Serviço",
-        "Preço (R$)", "Custo (R$)", "Lucro (R$)", "Forma Pagto", "Pago (R$)",
-        "Criado em", "Agendado para",
-      ];
-      const rows = serviceOrders.map((o) => [
-        o.id, o.title, o.description ?? "",
-        o.status, o.serviceType ?? "",
-        fmtBrl(o.price), fmtBrl(o.cost), fmtBrl((o.price ?? 0) - (o.cost ?? 0)),
-        o.paymentMethod ?? "", fmtBrl(o.amountPaid),
-        fmtDate(o.createdAt), fmtDate(o.scheduledAt),
-      ]);
-      await exportAndShare(`ordens_servcontrol_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+      await openExportUrl("/export/ordens.csv");
     } finally {
       setExporting(false);
     }

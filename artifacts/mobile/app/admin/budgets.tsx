@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { exportAndShare, fmtDate, fmtBrl } from "@/lib/exportCsv";
+import { openExportUrl } from "@/lib/exportCsv";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -43,17 +43,7 @@ export default function AdminBudgetsScreen() {
   async function handleExport() {
     setExporting(true);
     try {
-      const headers = [
-        "ID", "Título", "Descrição", "Status",
-        "Valor (R$)", "Serviço", "Notas", "Criado em",
-      ];
-      const rows = budgets.map((b) => [
-        b.id, b.title, b.description ?? "",
-        b.status, fmtBrl(b.value ?? 0),
-        b.serviceType ?? "", b.notes ?? "",
-        fmtDate(b.createdAt),
-      ]);
-      await exportAndShare(`orcamentos_servcontrol_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+      await openExportUrl("/export/orcamentos.csv");
     } finally {
       setExporting(false);
     }

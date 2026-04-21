@@ -1,7 +1,35 @@
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import { Alert, Platform, Share } from "react-native";
+import { Linking, Alert, Platform, Share } from "react-native";
 
+// ── BASE URL (same logic as api.ts) ──────────────────────────────────────────
+const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  "https://0c4f309c-6b3c-4e2f-96e4-8aadfecef50e-00-3gjzlqu4remhq.picard.replit.dev/api";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// openExportUrl — Opens a server-side CSV export URL in the system browser.
+// This is the most reliable approach for Expo Go (no native module limitations).
+// The browser will download or preview the CSV as a proper document.
+// ─────────────────────────────────────────────────────────────────────────────
+export async function openExportUrl(path: string): Promise<void> {
+  const url = BASE_URL.replace(/\/api$/, "") + "/api" + path;
+  try {
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("Erro", "Não foi possível abrir o navegador para baixar o arquivo.");
+    }
+  } catch (e: any) {
+    Alert.alert("Erro ao exportar", e?.message ?? "Tente novamente.");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// exportAndShare — Client-side CSV generation + native share sheet.
+// Used for financial dashboard where data is pre-calculated on the client.
+// ─────────────────────────────────────────────────────────────────────────────
 function escapeCsv(value: string | number | boolean | null | undefined): string {
   if (value == null) return "";
   const str = String(value);
@@ -48,69 +76,49 @@ export async function exportAndShare(
   try {
     const csv = buildCsv(headers, rows);
 
-    // ── WEB ────────────────────────────────────────────────────────────────
     if (Platform.OS === "web") {
       downloadWeb(filename, csv);
       return;
     }
 
-    // ── NATIVE (iOS / Android) ──────────────────────────────────────────────
+    // Try writing file + expo-sharing (best: opens native share with real file)
     const cacheDir = FileSystem.cacheDirectory;
-    if (!cacheDir) {
-      // Fallback: share as plain text
-      await Share.share({ message: csv, title: filename });
-      return;
-    }
-
-    const fileUri = cacheDir + filename;
-
-    // Write the CSV file
-    await FileSystem.writeAsStringAsync(fileUri, "\uFEFF" + csv, {
-      encoding: FileSystem.EncodingType.UTF8,
-    });
-
-    // Try expo-sharing (preferred — opens native share sheet with file)
-    const canShare = await Sharing.isAvailableAsync();
-    if (canShare) {
-      await Sharing.shareAsync(fileUri, {
-        mimeType: "text/csv",
-        dialogTitle: "Compartilhar planilha",
-        UTI: "public.comma-separated-values-text",
+    if (cacheDir) {
+      const fileUri = cacheDir + filename;
+      await FileSystem.writeAsStringAsync(fileUri, "\uFEFF" + csv, {
+        encoding: FileSystem.EncodingType.UTF8,
       });
-      return;
-    }
 
-    // Fallback 1: React Native Share with URL (iOS)
-    if (Platform.OS === "ios") {
-      await Share.share({ url: fileUri, title: filename });
-      return;
-    }
-
-    // Fallback 2: Share CSV text content (Android Expo Go)
-    await Share.share({
-      message: csv,
-      title: filename,
-    });
-  } catch (e: any) {
-    // If expo-sharing threw, try text fallback before showing error
-    if (e?.code !== "ERR_SHARING_MUI" && e?.message?.includes("sharing")) {
-      try {
-        const csv = buildCsv(headers, rows);
-        await Share.share({ message: csv, title: filename });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: "text/csv",
+          dialogTitle: "Compartilhar planilha",
+          UTI: "public.comma-separated-values-text",
+        });
         return;
-      } catch {
-        // fall through to error alert
+      }
+
+      // iOS fallback: share file URL via native Share
+      if (Platform.OS === "ios") {
+        await Share.share({ url: fileUri, title: filename });
+        return;
       }
     }
+
+    // Android / last resort: share CSV text content
+    await Share.share({ message: csv, title: filename });
+  } catch (e: any) {
     console.error("[exportCsv] erro:", e);
     Alert.alert(
       "Erro ao exportar",
-      e?.message ?? "Não foi possível exportar a planilha.",
+      e?.message ?? "Não foi possível exportar. Tente novamente.",
       [{ text: "OK" }]
     );
   }
 }
 
+// ── FORMATTERS ───────────────────────────────────────────────────────────────
 export function fmtDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "";
   try {

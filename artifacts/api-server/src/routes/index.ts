@@ -6,6 +6,7 @@ import budgetsRouter from "./budgets";
 import appointmentsRouter from "./appointments";
 import ordersRouter from "./orders";
 import clientsRouter from "./clients";
+import exportsRouter from "./exports";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(budgetsRouter);
 router.use(appointmentsRouter);
 router.use(ordersRouter);
 router.use(clientsRouter);
+router.use(exportsRouter);
 
 export default router;

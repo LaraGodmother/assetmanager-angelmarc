@@ -19,7 +19,7 @@ import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { Card } from "@/components/ui/Card";
 import { api, type ApiUser } from "@/lib/api";
-import { exportAndShare, fmtDate } from "@/lib/exportCsv";
+import { openExportUrl, fmtDate } from "@/lib/exportCsv";
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 function initials(name: string) {
@@ -94,15 +94,7 @@ export default function AdminClientsScreen() {
   async function handleExport() {
     setExporting(true);
     try {
-      const headers = ["ID", "Nome", "E-mail", "Telefone", "Cadastrado em"];
-      const rows = clients.map((c) => [
-        c.id,
-        c.name,
-        c.email,
-        c.phone ?? "",
-        fmtDate(c.createdAt),
-      ]);
-      await exportAndShare(`clientes_servcontrol_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+      await openExportUrl("/export/clientes.csv");
     } finally {
       setExporting(false);
     }
