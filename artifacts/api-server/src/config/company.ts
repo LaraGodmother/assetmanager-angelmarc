@@ -15,6 +15,6 @@ export const COMPANY = {
   address: "",
 
   // Cores para documentos PDF (hex sem #)
-  pdfColorPrimary: "1565C0",
-  pdfColorAccent: "F57C00",
+  pdfColorPrimary: "1B2D6B",
+  pdfColorAccent: "CC2020",
 };

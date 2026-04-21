@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ServControl",
+    "name": "Angelmarc Service",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,14 +11,14 @@
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1565C0"
+      "backgroundColor": "#1B2D6B"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.servcontrol.app"
+      "bundleIdentifier": "com.angelmarc.service"
     },
     "android": {
-      "package": "com.servcontrol.app"
+      "package": "com.angelmarc.service"
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -36,7 +36,7 @@
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
-          "color": "#1565C0",
+          "color": "#1B2D6B",
           "sounds": []
         }
       ]

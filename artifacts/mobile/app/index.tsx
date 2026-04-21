@@ -100,28 +100,16 @@ export default function HomeScreen() {
             resizeMode="contain"
           />
           <View>
-            <View style={{ flexDirection: "row" }}>
-              <Text
-                style={{
-                  fontSize: 24,
-                  fontWeight: "700",
-                  fontFamily: "Inter_700Bold",
-                  color: "#1565C0",
-                }}
-              >
-                Serv
-              </Text>
-              <Text
-                style={{
-                  fontSize: 24,
-                  fontWeight: "700",
-                  fontFamily: "Inter_700Bold",
-                  color: "#F57C00",
-                }}
-              >
-                Control
-              </Text>
-            </View>
+            <Text
+              style={{
+                fontSize: 22,
+                fontWeight: "700",
+                fontFamily: "Inter_700Bold",
+                color: BRAND.colors.primary,
+              }}
+            >
+              {BRAND.company.shortName}
+            </Text>
             <Text
               style={{
                 fontSize: 12,
@@ -129,7 +117,7 @@ export default function HomeScreen() {
                 fontFamily: "Inter_400Regular",
               }}
             >
-              Soluções Técnicas
+              {BRAND.company.tagline}
             </Text>
           </View>
         </View>
