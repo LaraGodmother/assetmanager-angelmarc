@@ -18,8 +18,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { BRAND } from "@/constants/theme";
 
-const logo = require("../../assets/images/logo.png");
+const logo = BRAND.logo;
 
 export default function LoginScreen() {
   const colors = useColors();
@@ -106,28 +107,18 @@ export default function LoginScreen() {
             }}
             resizeMode="contain"
           />
-          <View style={{ flexDirection: "row", marginBottom: 6 }}>
-            <Text
-              style={{
-                fontSize: 26,
-                fontWeight: "700",
-                fontFamily: "Inter_700Bold",
-                color: colors.primary,
-              }}
-            >
-              Serv
-            </Text>
-            <Text
-              style={{
-                fontSize: 26,
-                fontWeight: "700",
-                fontFamily: "Inter_700Bold",
-                color: colors.orange,
-              }}
-            >
-              Control
-            </Text>
-          </View>
+          <Text
+            style={{
+              fontSize: 22,
+              fontWeight: "700",
+              fontFamily: "Inter_700Bold",
+              color: BRAND.colors.primary,
+              textAlign: "center",
+              marginBottom: 6,
+            }}
+          >
+            {BRAND.company.name}
+          </Text>
           <Text
             style={{
               fontSize: 14,
