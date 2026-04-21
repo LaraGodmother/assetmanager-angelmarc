@@ -11,6 +11,7 @@ import {
   type ApiBudget,
   type ApiAppointment,
   type ApiService,
+  type ApiCalendarNote,
 } from "@/lib/api";
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
@@ -247,6 +248,11 @@ interface DataContextType {
     notes?: string;
   }) => Promise<Appointment>;
 
+  // Calendar notes
+  calendarNotes: Record<string, string>;
+  saveCalendarNote: (date: string, note: string) => Promise<void>;
+  deleteCalendarNote: (date: string) => Promise<void>;
+
   // Service catalog operations
   createService: (data: {
     name: string;
@@ -280,21 +286,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [calendarNotes, setCalendarNotes] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [ordersRaw, budgetsRaw, apptsRaw, svcsRaw] = await Promise.all([
+      const [ordersRaw, budgetsRaw, apptsRaw, svcsRaw, notesRaw] = await Promise.all([
         api.getOrders().catch(() => [] as ApiOrder[]),
         api.getBudgets().catch(() => [] as ApiBudget[]),
         api.getAppointments().catch(() => [] as ApiAppointment[]),
         api.getServices().catch(() => [] as ApiService[]),
+        api.getCalendarNotes().catch(() => [] as ApiCalendarNote[]),
       ]);
       setServiceOrders(ordersRaw.map(mapOrder));
       setBudgets(budgetsRaw.map(mapBudget));
       setAppointments(apptsRaw.map(mapAppointment));
       setServices(svcsRaw.map(mapService));
+      const notesMap: Record<string, string> = {};
+      notesRaw.forEach((n) => { notesMap[n.date] = n.note; });
+      setCalendarNotes(notesMap);
     } finally {
       setIsLoading(false);
     }
@@ -445,6 +456,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setServices((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
+  const saveCalendarNote = useCallback(async (date: string, note: string) => {
+    const saved = await api.saveCalendarNote(date, note);
+    setCalendarNotes((prev) => ({ ...prev, [date]: saved.note }));
+  }, []);
+
+  const deleteCalendarNote = useCallback(async (date: string) => {
+    await api.deleteCalendarNote(date);
+    setCalendarNotes((prev) => {
+      const next = { ...prev };
+      delete next[date];
+      return next;
+    });
+  }, []);
+
   const refreshData = useCallback(async () => {
     await loadData();
   }, [loadData]);
@@ -467,6 +492,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         createService,
         updateService,
         deleteService,
+        calendarNotes,
+        saveCalendarNote,
+        deleteCalendarNote,
         refreshData,
       }}
     >

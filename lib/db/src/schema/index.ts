@@ -112,6 +112,23 @@ export const serviceOrdersTable = pgTable("service_orders", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const calendarNotesTable = pgTable("calendar_notes", {
+  id: serial("id").primaryKey(),
+  date: text("date").notNull().unique(),
+  note: text("note").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertCalendarNoteSchema = createInsertSchema(calendarNotesTable).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export const selectCalendarNoteSchema = createSelectSchema(calendarNotesTable);
+export type InsertCalendarNote = z.infer<typeof insertCalendarNoteSchema>;
+export type CalendarNote = z.infer<typeof selectCalendarNoteSchema>;
+
 export const insertUserSchema = createInsertSchema(usersTable).omit({
   id: true,
   createdAt: true,

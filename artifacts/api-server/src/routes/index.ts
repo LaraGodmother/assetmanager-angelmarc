@@ -8,6 +8,7 @@ import ordersRouter from "./orders";
 import clientsRouter from "./clients";
 import exportsRouter from "./exports";
 import pdfOrcamentoRouter from "./pdfOrcamento";
+import calendarNotesRouter from "./calendarNotes";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(ordersRouter);
 router.use(clientsRouter);
 router.use(exportsRouter);
 router.use(pdfOrcamentoRouter);
+router.use(calendarNotesRouter);
 
 export default router;

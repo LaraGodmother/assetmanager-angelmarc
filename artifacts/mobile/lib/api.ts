@@ -147,6 +147,18 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
+
+  // Calendar Notes
+  getCalendarNotes: () => request<ApiCalendarNote[]>("/calendar-notes"),
+
+  saveCalendarNote: (date: string, note: string) =>
+    request<ApiCalendarNote>("/calendar-notes", {
+      method: "POST",
+      body: JSON.stringify({ date, note }),
+    }),
+
+  deleteCalendarNote: (date: string) =>
+    request<{ success: boolean }>(`/calendar-notes/${date}`, { method: "DELETE" }),
 };
 
 // ─── API Types ────────────────────────────────────────────────────────────────
@@ -218,4 +230,12 @@ export interface ApiOrder {
   serviceName?: string | null;
   serviceBasePrice?: string | null;
   serviceProfitMargin?: string | null;
+}
+
+export interface ApiCalendarNote {
+  id: number;
+  date: string;
+  note: string;
+  createdAt: string;
+  updatedAt: string;
 }
