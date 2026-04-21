@@ -248,6 +248,11 @@ interface DataContextType {
     notes?: string;
   }) => Promise<Appointment>;
 
+  // Client-filtered helpers
+  getClientOrders: (clientId: string) => ServiceOrder[];
+  getClientBudgets: (clientId: string) => Budget[];
+  getClientAppointments: (clientId: string) => Appointment[];
+
   // Calendar notes
   calendarNotes: Record<string, string>;
   saveCalendarNote: (date: string, note: string) => Promise<void>;
@@ -456,6 +461,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setServices((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
+  const getClientOrders = useCallback(
+    (clientId: string) => serviceOrders.filter((o) => o.clientId === clientId),
+    [serviceOrders]
+  );
+
+  const getClientBudgets = useCallback(
+    (clientId: string) => budgets.filter((b) => b.clientId === clientId),
+    [budgets]
+  );
+
+  const getClientAppointments = useCallback(
+    (clientId: string) => appointments.filter((a) => a.clientId === clientId),
+    [appointments]
+  );
+
   const saveCalendarNote = useCallback(async (date: string, note: string) => {
     const saved = await api.saveCalendarNote(date, note);
     setCalendarNotes((prev) => ({ ...prev, [date]: saved.note }));
@@ -492,6 +512,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         createService,
         updateService,
         deleteService,
+        getClientOrders,
+        getClientBudgets,
+        getClientAppointments,
         calendarNotes,
         saveCalendarNote,
         deleteCalendarNote,
