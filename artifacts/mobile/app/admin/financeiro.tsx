@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { exportAndShare, fmtDate, fmtBrl } from "@/lib/exportCsv";
+import { openExportUrl } from "@/lib/exportCsv";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -290,40 +290,7 @@ export default function FinanceiroScreen() {
   async function handleExport() {
     setExporting(true);
     try {
-      const periodoLabel = PERIOD_LABEL[period] ?? period;
-      const resumoRows: (string | number)[][] = [
-        ["Período", periodoLabel],
-        ["Faturamento", fmtBrl(kpis.faturamento)],
-        ["Lucro líquido", fmtBrl(kpis.lucro)],
-        ["Custo", fmtBrl(kpis.custo)],
-        ["Recebido", fmtBrl(kpis.totalRecebido)],
-        ["A receber", fmtBrl(kpis.totalAReceber)],
-        ["Ticket médio", fmtBrl(kpis.ticketMedio)],
-        ["Margem média", `${kpis.margemMedia.toFixed(1)}%`],
-        [""],
-        ["Ordens – Concluídas", orderStatus.concluidos],
-        ["Ordens – Em andamento", orderStatus.emAndamento],
-        ["Ordens – Pendentes", orderStatus.pendentes],
-        ["Ordens – Canceladas", orderStatus.cancelados],
-        [""],
-        ["Orçamentos – Aprovados", budgetStatus.aprovados],
-        ["Orçamentos – Aguardando", budgetStatus.aguardando],
-        ["Orçamentos – Recusados", budgetStatus.recusados],
-        [""],
-        ["Top clientes (nome)", "Total (R$)"],
-        ...topClients.map((c) => [c.name, fmtBrl(c.total)]),
-        [""],
-        ["Receita por serviço (tipo)", "Total (R$)"],
-        ...byServiceType.map(([type, value]) => [type, fmtBrl(value)]),
-        [""],
-        ["Formas de pagamento", "Qtd", "%"],
-        ...paymentMethods.map((p) => [p.method, p.count, `${p.pct.toFixed(1)}%`]),
-      ];
-      await exportAndShare(
-        `financeiro_servcontrol_${period}_${new Date().toISOString().slice(0, 10)}.csv`,
-        ["Indicador", "Valor"],
-        resumoRows
-      );
+      await openExportUrl(`/export/financeiro.csv?period=${period}`);
     } finally {
       setExporting(false);
     }
