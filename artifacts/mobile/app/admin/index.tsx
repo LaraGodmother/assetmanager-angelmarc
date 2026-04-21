@@ -18,8 +18,9 @@ import { useData } from "@/context/DataContext";
 import { Card } from "@/components/ui/Card";
 import { ServiceCard } from "@/components/ServiceCard";
 import { BudgetCard } from "@/components/BudgetCard";
+import { BRAND } from "@/constants/theme";
 
-const logo = require("../../assets/images/logo.png");
+const logo = BRAND.logo;
 
 function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

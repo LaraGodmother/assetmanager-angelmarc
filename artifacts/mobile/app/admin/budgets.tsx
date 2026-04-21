@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { openExportUrl } from "@/lib/exportCsv";
+import { BRAND } from "@/constants/theme";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -77,7 +78,7 @@ export default function AdminBudgetsScreen() {
   async function handleShareWhatsApp(budget: Budget) {
     const pdfUrl = buildPdfUrl(budget.id);
     const msg = encodeURIComponent(
-      `Olá ${budget.clientName}! Segue o orçamento Nº ${budget.id.padStart(4, "0")} da Grupo Angelmarc Service & System.\n\nAcesse para visualizar:\n${pdfUrl}`
+      `Olá ${budget.clientName}! Segue o orçamento Nº ${budget.id.padStart(4, "0")} da ${BRAND.company.name}.\n\nAcesse para visualizar:\n${pdfUrl}`
     );
     const phone = budget.clientPhone?.replace(/\D/g, "");
     const waUrl = phone

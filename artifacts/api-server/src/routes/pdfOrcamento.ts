@@ -3,16 +3,17 @@ import { db } from "@workspace/db";
 import { budgetsTable, usersTable, servicesTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import PDFDocument from "pdfkit";
+import { COMPANY } from "../config/company";
 
 const router = Router();
 
-const BRAND_BLUE = "#1565C0";
-const BRAND_ORANGE = "#F57C00";
-const COMPANY_NAME = "Grupo Angelmarc Service & System";
-const COMPANY_CNPJ = "CNPJ: 65.591.897/0001-10";
-const COMPANY_CITY = "Guarulhos-SP";
-const COMPANY_PHONE = "(11) 98520-6774";
-const COMPANY_EMAIL = "grupoangelmarc@outlook.com.br";
+const BRAND_BLUE = `#${COMPANY.pdfColorPrimary}`;
+const BRAND_ORANGE = `#${COMPANY.pdfColorAccent}`;
+const COMPANY_NAME = COMPANY.name;
+const COMPANY_CNPJ = `CNPJ: ${COMPANY.cnpj}`;
+const COMPANY_CITY = COMPANY.city;
+const COMPANY_PHONE = COMPANY.phone;
+const COMPANY_EMAIL = COMPANY.email;
 
 function fmtBrl(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

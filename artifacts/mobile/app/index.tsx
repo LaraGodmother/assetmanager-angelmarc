@@ -14,21 +14,22 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { BRAND } from "@/constants/theme";
 
-const logo = require("../assets/images/logo.png");
+const logo = BRAND.logo;
 
 const SERVICES = [
   {
     icon: "zap" as const,
     title: "Elétrica",
     description: "Instalações, reparos e manutenção elétrica residencial e comercial",
-    color: "#F57C00",
+    color: BRAND.colors.accent,
   },
   {
     icon: "video" as const,
     title: "CFTV / Câmeras",
     description: "Instalação e monitoramento de sistemas de segurança com câmeras",
-    color: "#1565C0",
+    color: BRAND.colors.primary,
   },
   {
     icon: "wind" as const,
@@ -50,11 +51,8 @@ const SERVICES = [
   },
 ];
 
-const WHATSAPP_NUMBER = "5511999999999";
-const WHATSAPP_MSG = "Olá, gostaria de solicitar um orçamento.";
-
 function openWhatsApp() {
-  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MSG)}`;
+  const url = `https://wa.me/${BRAND.company.whatsapp}?text=${encodeURIComponent(BRAND.company.tagline)}`;
   Linking.openURL(url);
 }
 

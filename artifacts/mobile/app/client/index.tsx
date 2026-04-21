@@ -18,8 +18,9 @@ import { useData } from "@/context/DataContext";
 import { Card } from "@/components/ui/Card";
 import { ServiceCard } from "@/components/ServiceCard";
 import { AppointmentCard } from "@/components/AppointmentCard";
+import { BRAND } from "@/constants/theme";
 
-const logo = require("../../assets/images/logo.png");
+const logo = BRAND.logo;
 
 const QUICK_ACTIONS = [
   {

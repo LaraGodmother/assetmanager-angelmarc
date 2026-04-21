@@ -1,7 +1,9 @@
+import { BRAND } from "./theme";
+
 const colors = {
   light: {
     text: "#0f172a",
-    tint: "#1565C0",
+    tint: BRAND.colors.primary,
 
     background: "#f8fafc",
     foreground: "#0f172a",
@@ -9,24 +11,20 @@ const colors = {
     card: "#ffffff",
     cardForeground: "#0f172a",
 
-    // Primary: deep blue matching the ServControl shield
-    primary: "#1565C0",
+    primary: BRAND.colors.primary,
     primaryForeground: "#ffffff",
 
-    // Secondary: bright sky blue (lighter shade from logo)
-    secondary: "#E3F2FD",
-    secondaryForeground: "#1565C0",
+    secondary: BRAND.colors.primaryLight,
+    secondaryForeground: BRAND.colors.primary,
 
     muted: "#f1f5f9",
     mutedForeground: "#64748b",
 
-    // Accent: the orange from "Control" in the logo
-    accent: "#FFF3E0",
-    accentForeground: "#E65100",
+    accent: BRAND.colors.accentLight,
+    accentForeground: BRAND.colors.accentDark,
 
-    // Orange — used for highlights, badges, call-to-action
-    orange: "#F57C00",
-    orangeLight: "#FFF3E0",
+    orange: BRAND.colors.accent,
+    orangeLight: BRAND.colors.accentLight,
 
     destructive: "#ef4444",
     destructiveForeground: "#ffffff",
@@ -40,7 +38,7 @@ const colors = {
     border: "#e2e8f0",
     input: "#e2e8f0",
 
-    headerBg: "#1565C0",
+    headerBg: BRAND.colors.primary,
     headerText: "#ffffff",
   },
 
