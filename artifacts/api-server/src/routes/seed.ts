@@ -58,22 +58,36 @@ export async function seedDatabase() {
       const passwordHash = await bcrypt.hash("admin123", 12);
       await db.insert(usersTable).values({
         name: "Administrador",
-        email: "admin@servcontrol.com",
+        email: "admin@angelmarc.com",
         passwordHash,
         role: "admin",
-        phone: "(11) 99999-9999",
+        phone: "(11) 98520-6774",
       });
       console.log("✅ Admin inserido com seed.");
     } else {
-      const [admin] = await db
-        .select({ id: usersTable.id, hash: usersTable.passwordHash })
+      const [adminOld] = await db
+        .select({ id: usersTable.id, hash: usersTable.passwordHash, email: usersTable.email })
         .from(usersTable)
         .where(eq(usersTable.email, "admin@servcontrol.com"))
         .limit(1);
-      if (admin && !admin.hash.startsWith("$2b$") && !admin.hash.startsWith("$2a$")) {
-        const upgraded = await bcrypt.hash("admin123", 12);
-        await db.update(usersTable).set({ passwordHash: upgraded }).where(eq(usersTable.id, admin.id));
-        console.log("✅ Senha do admin migrada para bcrypt.");
+      if (adminOld) {
+        const updates: Record<string, string> = { email: "admin@angelmarc.com" };
+        if (!adminOld.hash.startsWith("$2b$") && !adminOld.hash.startsWith("$2a$")) {
+          updates.passwordHash = await bcrypt.hash("admin123", 12);
+        }
+        await db.update(usersTable).set(updates).where(eq(usersTable.id, adminOld.id));
+        console.log("✅ Admin migrado: email e senha atualizados.");
+      } else {
+        const [adminNew] = await db
+          .select({ id: usersTable.id, hash: usersTable.passwordHash })
+          .from(usersTable)
+          .where(eq(usersTable.email, "admin@angelmarc.com"))
+          .limit(1);
+        if (adminNew && !adminNew.hash.startsWith("$2b$") && !adminNew.hash.startsWith("$2a$")) {
+          const upgraded = await bcrypt.hash("admin123", 12);
+          await db.update(usersTable).set({ passwordHash: upgraded }).where(eq(usersTable.id, adminNew.id));
+          console.log("✅ Senha do admin migrada para bcrypt.");
+        }
       }
     }
   } catch (err) {

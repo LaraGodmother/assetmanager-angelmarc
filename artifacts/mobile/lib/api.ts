@@ -159,6 +159,13 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  // Auth
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ success: boolean; message: string }>("/auth/change-password", {
+      method: "PATCH",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+
   // Calendar Notes
   getCalendarNotes: () => request<ApiCalendarNote[]>("/calendar-notes"),
 

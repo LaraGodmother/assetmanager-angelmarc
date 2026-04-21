@@ -81,22 +81,22 @@ export default function AdminDashboard() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Image source={logo} style={{ width: 50, height: 50 }} resizeMode="contain" />
           <View>
-            <View style={{ flexDirection: "row" }}>
-              <Text style={{ fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold", color: "#1565C0" }}>
-                Serv
-              </Text>
-              <Text style={{ fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold", color: "#F57C00" }}>
-                Control
-              </Text>
-            </View>
+            <Text style={{ fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold", color: BRAND.colors.primary }}>
+              {BRAND.company.shortName}
+            </Text>
             <Text style={{ fontSize: 11, color: "#64748b", fontFamily: "Inter_400Regular" }}>
               Painel Admin
             </Text>
           </View>
         </View>
-        <TouchableOpacity onPress={async () => { await logout(); router.replace("/auth/login"); }} style={styles.logoutBtn}>
-          <Feather name="log-out" size={20} color="#1565C0" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <TouchableOpacity onPress={() => router.push("/admin/perfil")} style={styles.logoutBtn}>
+            <Feather name="user" size={20} color={BRAND.colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={async () => { await logout(); router.replace("/auth/login"); }} style={styles.logoutBtn}>
+            <Feather name="log-out" size={20} color={BRAND.colors.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Blue stats bar */}

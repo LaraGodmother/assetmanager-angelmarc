@@ -27,13 +27,13 @@ const QUICK_ACTIONS = [
     icon: "file-text" as const,
     label: "Solicitar\nOrçamento",
     route: "/auth/request-budget",
-    color: "#F57C00",
+    color: BRAND.colors.accent,
   },
   {
     icon: "plus-circle" as const,
     label: "Novo\nServiço",
     route: "/client/new-service",
-    color: "#1565C0",
+    color: BRAND.colors.primary,
   },
   {
     icon: "list" as const,
@@ -94,18 +94,13 @@ export default function ClientDashboard() {
             <Text style={{ fontSize: 12, color: "#64748b", fontFamily: "Inter_400Regular" }}>
               Olá, {user?.name?.split(" ")[0] ?? "Cliente"}
             </Text>
-            <View style={{ flexDirection: "row" }}>
-              <Text style={{ fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold", color: "#1565C0" }}>
-                Serv
-              </Text>
-              <Text style={{ fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold", color: "#F57C00" }}>
-                Control
-              </Text>
-            </View>
+            <Text style={{ fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold", color: BRAND.colors.primary }}>
+              {BRAND.company.shortName}
+            </Text>
           </View>
         </View>
         <TouchableOpacity onPress={async () => { await logout(); router.replace("/auth/login"); }} style={styles.logoutBtn}>
-          <Feather name="log-out" size={20} color="#1565C0" />
+          <Feather name="log-out" size={20} color={BRAND.colors.primary} />
         </TouchableOpacity>
       </View>
 
