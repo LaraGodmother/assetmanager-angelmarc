@@ -13,6 +13,13 @@ import {
   type ApiService,
   type ApiCalendarNote,
 } from "@/lib/api";
+import {
+  rescheduleAllNotifications,
+  scheduleAppointmentNotification,
+  cancelAppointmentNotification,
+  scheduleCalendarNoteNotification,
+  cancelCalendarNoteNotification,
+} from "@/lib/notifications";
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
 export type ServiceStatus =
@@ -320,13 +327,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         api.getServices().catch(() => [] as ApiService[]),
         api.getCalendarNotes().catch(() => [] as ApiCalendarNote[]),
       ]);
+      const mappedAppts = apptsRaw.map(mapAppointment);
       setServiceOrders(ordersRaw.map(mapOrder));
       setBudgets(budgetsRaw.map(mapBudget));
-      setAppointments(apptsRaw.map(mapAppointment));
+      setAppointments(mappedAppts);
       setServices(svcsRaw.map(mapService));
       const notesMap: Record<string, string> = {};
       notesRaw.forEach((n) => { notesMap[n.date] = n.note; });
       setCalendarNotes(notesMap);
+      rescheduleAllNotifications(mappedAppts, notesMap).catch(() => {});
     } finally {
       setIsLoading(false);
     }
@@ -429,9 +438,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const updated = await api.updateAppointment(Number(id), {
         status: APPT_STATUS_REVERSE[status],
       });
-      setAppointments((prev) =>
-        prev.map((a) => (a.id === id ? mapAppointment(updated) : a))
-      );
+      const mapped = mapAppointment(updated);
+      setAppointments((prev) => prev.map((a) => (a.id === id ? mapped : a)));
+
+      if (status === "confirmado" || status === "agendado") {
+        scheduleAppointmentNotification(
+          id,
+          mapped.clientName,
+          mapped.serviceType,
+          mapped.date,
+          mapped.time
+        ).catch(() => {});
+      } else {
+        cancelAppointmentNotification(id).catch(() => {});
+      }
     },
     []
   );
@@ -447,6 +467,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const created = await api.createAppointment(data);
       const mapped = mapAppointment(created);
       setAppointments((prev) => [mapped, ...prev]);
+      scheduleAppointmentNotification(
+        mapped.id,
+        mapped.clientName,
+        mapped.serviceType,
+        mapped.date,
+        mapped.time
+      ).catch(() => {});
       return mapped;
     },
     []
@@ -548,6 +575,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const saveCalendarNote = useCallback(async (date: string, note: string) => {
     const saved = await api.saveCalendarNote(date, note);
     setCalendarNotes((prev) => ({ ...prev, [date]: saved.note }));
+    scheduleCalendarNoteNotification(date, saved.note).catch(() => {});
   }, []);
 
   const deleteCalendarNote = useCallback(async (date: string) => {
@@ -557,6 +585,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       delete next[date];
       return next;
     });
+    cancelCalendarNoteNotification(date).catch(() => {});
   }, []);
 
   const refreshData = useCallback(async () => {
