@@ -226,6 +226,13 @@ interface DataContextType {
     preferredDate?: string;
     preferredTime?: string;
   }) => Promise<ServiceOrder>;
+  createServiceOrder: (data: {
+    clientId: string;
+    serviceId: number;
+    description?: string;
+    preferredDate?: string;
+    preferredTime?: string;
+  }) => Promise<ServiceOrder>;
 
   updateBudgetStatus: (id: string, status: BudgetStatus) => Promise<void>;
   createBudget: (data: {
@@ -233,6 +240,12 @@ interface DataContextType {
     serviceId: number;
     baseValue: number;
     profitMargin?: number;
+    observations?: string;
+  }) => Promise<Budget>;
+  createBudgetRequest: (data: {
+    clientId: string;
+    serviceId: number;
+    baseValue: number;
     observations?: string;
   }) => Promise<Budget>;
 
@@ -461,6 +474,43 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setServices((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
+  const createServiceOrder = useCallback(
+    async (data: {
+      clientId: string;
+      serviceId: number;
+      description?: string;
+      preferredDate?: string;
+      preferredTime?: string;
+    }) => {
+      const created = await api.createOrder({
+        clientId: Number(data.clientId),
+        serviceId: data.serviceId,
+        description: data.description,
+        preferredDate: data.preferredDate,
+        preferredTime: data.preferredTime,
+      });
+      const mapped = mapOrder(created);
+      setServiceOrders((prev) => [mapped, ...prev]);
+      return mapped;
+    },
+    []
+  );
+
+  const createBudgetRequest = useCallback(
+    async (data: { clientId: string; serviceId: number; baseValue: number; observations?: string }) => {
+      const created = await api.createBudget({
+        clientId: Number(data.clientId),
+        serviceId: data.serviceId,
+        baseValue: data.baseValue,
+        observations: data.observations,
+      });
+      const mapped = mapBudget(created);
+      setBudgets((prev) => [mapped, ...prev]);
+      return mapped;
+    },
+    []
+  );
+
   const getClientOrders = useCallback(
     (clientId: string) => serviceOrders.filter((o) => o.clientId === clientId),
     [serviceOrders]
@@ -505,8 +555,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         updateServiceOrderStatus,
         updateServiceOrderFinance,
         createOrder,
+        createServiceOrder,
         updateBudgetStatus,
         createBudget,
+        createBudgetRequest,
         updateAppointmentStatus,
         createAppointment,
         createService,
