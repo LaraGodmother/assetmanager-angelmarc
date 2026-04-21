@@ -1,6 +1,8 @@
 const BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
-  "https://0c4f309c-6b3c-4e2f-96e4-8aadfecef50e-00-3gjzlqu4remhq.picard.replit.dev/api";
+  (typeof window !== "undefined"
+    ? window.location.origin + "/api"
+    : "https://0c4f309c-6b3c-4e2f-96e4-8aadfecef50e-00-3gjzlqu4remhq.picard.replit.dev/api");
 
 let _authToken: string | null = null;
 

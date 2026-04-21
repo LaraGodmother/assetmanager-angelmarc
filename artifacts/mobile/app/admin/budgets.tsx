@@ -25,7 +25,9 @@ import { Card } from "@/components/ui/Card";
 
 const API_BASE =
   process.env.EXPO_PUBLIC_API_URL ||
-  "https://0c4f309c-6b3c-4e2f-96e4-8aadfecef50e-00-3gjzlqu4remhq.picard.replit.dev/api";
+  (typeof window !== "undefined"
+    ? window.location.origin + "/api"
+    : "https://0c4f309c-6b3c-4e2f-96e4-8aadfecef50e-00-3gjzlqu4remhq.picard.replit.dev/api");
 
 function buildPdfUrl(budgetId: string) {
   return API_BASE.replace(/\/api$/, "") + "/api/orcamentos/" + budgetId + "/pdf";
