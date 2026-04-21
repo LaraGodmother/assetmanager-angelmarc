@@ -60,7 +60,7 @@ export async function openExportUrl(path: string): Promise<void> {
     const fileUri = `${cacheDir}export_${slugPath}_${today}.csv`;
 
     await FileSystem.writeAsStringAsync(fileUri, csvText, {
-      encoding: FileSystem.EncodingType.UTF8,
+      encoding: "utf8" as any,
     });
 
     const canShare = await Sharing.isAvailableAsync();
