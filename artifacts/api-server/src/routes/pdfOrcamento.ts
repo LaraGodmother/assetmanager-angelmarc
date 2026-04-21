@@ -22,6 +22,58 @@ function fmtDate(d: Date) {
   return d.toLocaleDateString("pt-BR");
 }
 
+interface ItemRow {
+  qty: string;
+  desc: string;
+  unitPrice: number | null;
+  lineTotal: number | null;
+}
+
+function parseObsLine(line: string): ItemRow {
+  // "2 câmeras intelbras R$500" or "2 câmeras R$500,00"
+  let m = line.match(/^(\d+(?:[.,]\d+)?)\s+(.+?)\s+R\$\s*([\d.]+(?:,\d{1,2})?)\s*$/i);
+  if (m) {
+    const qty = parseFloat(m[1].replace(",", "."));
+    const price = parseFloat(m[3].replace(/\./g, "").replace(",", "."));
+    return { qty: m[1], desc: m[2].trim(), unitPrice: price, lineTotal: qty * price };
+  }
+  // "cabos e conectores R$500"
+  m = line.match(/^(.+?)\s+R\$\s*([\d.]+(?:,\d{1,2})?)\s*$/i);
+  if (m) {
+    const price = parseFloat(m[2].replace(/\./g, "").replace(",", "."));
+    return { qty: "1", desc: m[1].trim(), unitPrice: price, lineTotal: price };
+  }
+  return { qty: "1", desc: line, unitPrice: null, lineTotal: null };
+}
+
+function buildItemRows(
+  serviceName: string,
+  observations: string | null | undefined,
+  finalValue: number
+): ItemRow[] {
+  const lines = (observations ?? "")
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+
+  if (lines.length === 0) {
+    return [{ qty: "1", desc: serviceName || "Serviço", unitPrice: finalValue, lineTotal: finalValue }];
+  }
+
+  const parsed = lines.map(parseObsLine);
+  const hasPrices = parsed.some((i) => i.unitPrice !== null);
+
+  if (!hasPrices) {
+    // No prices detected: show service row + obs lines as descriptions
+    return [
+      { qty: "1", desc: serviceName || "Serviço", unitPrice: finalValue, lineTotal: finalValue },
+      ...parsed,
+    ];
+  }
+
+  return parsed;
+}
+
 router.get("/orcamentos/:id/pdf", async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -147,35 +199,59 @@ router.get("/orcamentos/:id/pdf", async (req, res) => {
 
     Y += 16;
 
-    // Table header
-    const COL_DESC = COL * 0.50;
-    const COL_QTY = COL * 0.10;
+    // Column widths
+    const COL_DESC = COL * 0.52;
+    const COL_QTY  = COL * 0.08;
     const COL_UNIT = COL * 0.20;
     const COL_TOTAL = COL * 0.20;
 
+    // Header row
     doc.rect(MARGIN, Y, COL, 22).fill(BRAND_BLUE);
-
     doc.fillColor("#FFFFFF").font("Helvetica-Bold").fontSize(9);
-    doc.text("DESCRIÇÃO DO SERVIÇO", MARGIN + 6, Y + 7, { width: COL_DESC });
-    doc.text("QUANT.", MARGIN + COL_DESC + 4, Y + 7, { width: COL_QTY, align: "center" });
-    doc.text("UNITÁRIO (R$)", MARGIN + COL_DESC + COL_QTY + 4, Y + 7, { width: COL_UNIT, align: "right" });
-    doc.text("TOTAL (R$)", MARGIN + COL_DESC + COL_QTY + COL_UNIT + 4, Y + 7, { width: COL_TOTAL - 6, align: "right" });
-
+    doc.text("DESCRIÇÃO DO SERVIÇO", MARGIN + 6,                              Y + 7, { width: COL_DESC - 6 });
+    doc.text("QTD",                  MARGIN + COL_DESC + 2,                   Y + 7, { width: COL_QTY,   align: "center" });
+    doc.text("UNIT. (R$)",           MARGIN + COL_DESC + COL_QTY + 2,        Y + 7, { width: COL_UNIT,  align: "right" });
+    doc.text("TOTAL (R$)",           MARGIN + COL_DESC + COL_QTY + COL_UNIT + 2, Y + 7, { width: COL_TOTAL - 6, align: "right" });
     Y += 22;
 
-    // Single service row
-    const rowH = 28;
-    doc.rect(MARGIN, Y, COL, rowH).fill("#F5F9FF");
-    doc.rect(MARGIN, Y, COL, rowH).stroke("#D1E8FF");
+    // Build item rows from observations
+    const items = buildItemRows(row.serviceName ?? "", row.observations, finalValue);
 
-    const serviceDesc = [row.serviceName, row.observations].filter(Boolean).join(" — ");
-    doc.fillColor("#212121").font("Helvetica").fontSize(9);
-    doc.text(serviceDesc || "—", MARGIN + 6, Y + 6, { width: COL_DESC - 6, height: rowH - 6 });
-    doc.text("1", MARGIN + COL_DESC + 4, Y + 10, { width: COL_QTY, align: "center" });
-    doc.text(fmtBrl(baseValue), MARGIN + COL_DESC + COL_QTY + 4, Y + 10, { width: COL_UNIT, align: "right" });
-    doc.text(fmtBrl(finalValue), MARGIN + COL_DESC + COL_QTY + COL_UNIT + 4, Y + 10, { width: COL_TOTAL - 6, align: "right" });
+    // Compute grand total from items if all have prices; else use finalValue
+    const itemsTotal = items.reduce((s, i) => s + (i.lineTotal ?? 0), 0);
+    const grandTotal = itemsTotal > 0 ? itemsTotal : finalValue;
 
-    Y += rowH + 10;
+    // Render each item row
+    items.forEach((item, idx) => {
+      const rowBg = idx % 2 === 0 ? "#F5F9FF" : "#FFFFFF";
+      const textH = Math.max(
+        18,
+        (doc as any).heightOfString(item.desc, { width: COL_DESC - 12, font: "Helvetica", fontSize: 9 }) + 8
+      );
+      const rowH = textH + 8;
+
+      doc.rect(MARGIN, Y, COL, rowH).fill(rowBg).stroke("#D1E8FF");
+
+      const midY = Y + rowH / 2 - 5;
+
+      doc.fillColor("#212121").font("Helvetica").fontSize(9);
+      // Description — allow wrap
+      doc.text(item.desc || "—", MARGIN + 6, Y + 6, { width: COL_DESC - 12, lineBreak: true });
+      // Qty
+      doc.text(item.qty, MARGIN + COL_DESC + 2, midY, { width: COL_QTY, align: "center" });
+      // Unit price
+      if (item.unitPrice !== null) {
+        doc.text(fmtBrl(item.unitPrice), MARGIN + COL_DESC + COL_QTY + 2, midY, { width: COL_UNIT, align: "right" });
+        doc.text(fmtBrl(item.lineTotal!), MARGIN + COL_DESC + COL_QTY + COL_UNIT + 2, midY, { width: COL_TOTAL - 6, align: "right" });
+      } else {
+        doc.fillColor("#94a3b8").text("—", MARGIN + COL_DESC + COL_QTY + 2, midY, { width: COL_UNIT, align: "right" });
+        doc.text("—", MARGIN + COL_DESC + COL_QTY + COL_UNIT + 2, midY, { width: COL_TOTAL - 6, align: "right" });
+      }
+
+      Y += rowH;
+    });
+
+    Y += 10;
 
     // ── TOTALS ───────────────────────────────────────────────────────────────
     const totalBoxW = 200;
@@ -191,11 +267,11 @@ router.get("/orcamentos/:id/pdf", async (req, res) => {
     doc.text("Total Geral:", TX + 10, Y + 44, { width: 90 });
 
     doc.fillColor("#212121").font("Helvetica").fontSize(9);
-    doc.text(fmtBrl(finalValue), TX + 100, Y + 10, { width: 90, align: "right" });
+    doc.text(fmtBrl(grandTotal), TX + 100, Y + 10, { width: 90, align: "right" });
     doc.text(fmtBrl(discount), TX + 100, Y + 26, { width: 90, align: "right" });
 
     doc.fillColor(BRAND_BLUE).font("Helvetica-Bold").fontSize(11);
-    doc.text(fmtBrl(finalValue), TX + 100, Y + 42, { width: 90, align: "right" });
+    doc.text(fmtBrl(grandTotal), TX + 100, Y + 42, { width: 90, align: "right" });
 
     Y += 90;
 

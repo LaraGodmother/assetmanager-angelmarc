@@ -413,8 +413,8 @@ export default function AdminBudgetsScreen() {
                 placeholderTextColor={colors.mutedForeground}
               />
 
-              {/* Observações */}
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+              {/* Observações / Itens */}
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                 <Text
                   style={{
                     flex: 1,
@@ -424,7 +424,7 @@ export default function AdminBudgetsScreen() {
                     color: colors.mutedForeground,
                   }}
                 >
-                  Observações
+                  Itens / Observações
                 </Text>
                 <TouchableOpacity
                   onPress={() => Keyboard.dismiss()}
@@ -444,12 +444,29 @@ export default function AdminBudgetsScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Format hint */}
+              <View style={{
+                backgroundColor: "#EFF6FF",
+                borderRadius: 8,
+                padding: 10,
+                marginBottom: 8,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: 6,
+              }}>
+                <Feather name="info" size={13} color="#1565C0" style={{ marginTop: 1 }} />
+                <Text style={{ fontSize: 11, color: "#1565C0", fontFamily: "Inter_400Regular", flex: 1, lineHeight: 16 }}>
+                  {"Cada linha = 1 item no PDF.\nExemplo:\nServiço instalação R$500\n2 câmeras Intelbras R$500\nCabos e conectores R$150"}
+                </Text>
+              </View>
+
               <TextInput
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Detalhes do orçamento..."
+                placeholder={"Serviço instalação R$500\n2 câmeras Intelbras R$500\nCabos e conectores R$150"}
                 multiline
-                numberOfLines={4}
+                numberOfLines={6}
                 blurOnSubmit={false}
                 style={{
                   borderWidth: 1.5,
@@ -459,10 +476,11 @@ export default function AdminBudgetsScreen() {
                   marginBottom: 20,
                   color: colors.foreground,
                   fontFamily: "Inter_400Regular",
-                  fontSize: 14,
+                  fontSize: 13,
                   backgroundColor: colors.muted,
-                  minHeight: 90,
+                  minHeight: 130,
                   textAlignVertical: "top",
+                  lineHeight: 20,
                 }}
                 placeholderTextColor={colors.mutedForeground}
               />
