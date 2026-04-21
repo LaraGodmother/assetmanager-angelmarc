@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Keyboard,
   Linking,
   Modal,
   Platform,
@@ -205,211 +207,262 @@ export default function AdminBudgetsScreen() {
       </ScrollView>
 
       {/* Budget Detail Modal */}
-      <Modal visible={showModal} transparent animationType="slide">
-        <Pressable
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}
-          onPress={() => setShowModal(false)}
+      <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 24,
-              paddingBottom: 40,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 17,
-                fontWeight: "700",
-                fontFamily: "Inter_700Bold",
-                color: colors.foreground,
-                marginBottom: 4,
-              }}
-            >
-              {selectedBudget?.serviceType}
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                color: colors.mutedForeground,
-                fontFamily: "Inter_400Regular",
-                marginBottom: 4,
-              }}
-            >
-              Cliente: {selectedBudget?.clientName}
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                color: colors.foreground,
-                fontFamily: "Inter_400Regular",
-                lineHeight: 18,
-                marginBottom: 14,
-              }}
-            >
-              {selectedBudget?.description}
-            </Text>
+          {/* Backdrop — only closes on direct tap of the dark area */}
+          <Pressable
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
+            onPress={() => { Keyboard.dismiss(); setShowModal(false); }}
+          />
 
-            {/* PDF + WhatsApp row */}
-            <View style={{ flexDirection: "row", gap: 10, marginBottom: 18 }}>
-              <TouchableOpacity
-                onPress={() => selectedBudget && handleGeneratePdf(selectedBudget)}
-                disabled={generatingPdf}
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  paddingVertical: 12,
-                  borderRadius: 10,
-                  backgroundColor: "#EFF6FF",
-                  borderWidth: 1.5,
-                  borderColor: "#BFDBFE",
-                }}
-              >
-                {generatingPdf ? (
-                  <ActivityIndicator size="small" color="#1565C0" />
-                ) : (
-                  <Feather name="file-text" size={16} color="#1565C0" />
-                )}
-                <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#1565C0" }}>
-                  Gerar PDF
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => selectedBudget && handleShareWhatsApp(selectedBudget)}
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  paddingVertical: 12,
-                  borderRadius: 10,
-                  backgroundColor: "#F0FDF4",
-                  borderWidth: 1.5,
-                  borderColor: "#BBF7D0",
-                }}
-              >
-                <Feather name="message-circle" size={16} color="#16A34A" />
-                <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#16A34A" }}>
-                  WhatsApp
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: "500",
-                fontFamily: "Inter_500Medium",
-                color: colors.mutedForeground,
-                marginBottom: 6,
-              }}
+          {/* Modal content — stops touches from reaching the backdrop */}
+          <Pressable onPress={() => {}} style={{ backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
             >
-              Valor (R$)
-            </Text>
-            <TextInput
-              value={valueInput}
-              onChangeText={setValueInput}
-              placeholder="Ex: 1500.00"
-              keyboardType="numeric"
-              style={{
-                height: 48,
-                borderWidth: 1.5,
-                borderColor: colors.border,
-                borderRadius: 10,
-                paddingHorizontal: 12,
-                marginBottom: 12,
-                color: colors.foreground,
-                fontFamily: "Inter_400Regular",
-                fontSize: 15,
-                backgroundColor: colors.muted,
-              }}
-              placeholderTextColor={colors.mutedForeground}
-            />
-
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: "500",
-                fontFamily: "Inter_500Medium",
-                color: colors.mutedForeground,
-                marginBottom: 6,
-              }}
-            >
-              Observações
-            </Text>
-            <TextInput
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Detalhes do orçamento..."
-              multiline
-              numberOfLines={3}
-              style={{
-                borderWidth: 1.5,
-                borderColor: colors.border,
-                borderRadius: 10,
-                padding: 12,
-                marginBottom: 16,
-                color: colors.foreground,
-                fontFamily: "Inter_400Regular",
-                fontSize: 14,
-                backgroundColor: colors.muted,
-                height: 80,
-                textAlignVertical: "top",
-              }}
-              placeholderTextColor={colors.mutedForeground}
-            />
-
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <TouchableOpacity
-                onPress={() => updateStatus("recusado")}
-                style={{
-                  flex: 1,
-                  padding: 14,
-                  borderRadius: 10,
-                  backgroundColor: "#fee2e2",
-                  alignItems: "center",
-                }}
-              >
-                <Text
+              {/* Header row with close button */}
+              <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 4 }}>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 17,
+                      fontWeight: "700",
+                      fontFamily: "Inter_700Bold",
+                      color: colors.foreground,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {selectedBudget?.serviceType}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: colors.mutedForeground,
+                      fontFamily: "Inter_400Regular",
+                      marginBottom: 4,
+                    }}
+                  >
+                    Cliente: {selectedBudget?.clientName}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => { Keyboard.dismiss(); setShowModal(false); }}
                   style={{
-                    color: "#991b1b",
-                    fontFamily: "Inter_600SemiBold",
-                    fontSize: 14,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: colors.muted,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginLeft: 8,
                   }}
                 >
-                  Recusar
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => updateStatus("aprovado")}
+                  <Feather name="x" size={18} color={colors.mutedForeground} />
+                </TouchableOpacity>
+              </View>
+
+              <Text
                 style={{
-                  flex: 1,
-                  padding: 14,
-                  borderRadius: 10,
-                  backgroundColor: "#dcfce7",
-                  alignItems: "center",
+                  fontSize: 13,
+                  color: colors.foreground,
+                  fontFamily: "Inter_400Regular",
+                  lineHeight: 18,
+                  marginBottom: 14,
                 }}
               >
-                <Text
+                {selectedBudget?.description}
+              </Text>
+
+              {/* PDF + WhatsApp row */}
+              <View style={{ flexDirection: "row", gap: 10, marginBottom: 18 }}>
+                <TouchableOpacity
+                  onPress={() => selectedBudget && handleGeneratePdf(selectedBudget)}
+                  disabled={generatingPdf}
                   style={{
-                    color: "#166534",
-                    fontFamily: "Inter_600SemiBold",
-                    fontSize: 14,
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    paddingVertical: 12,
+                    borderRadius: 10,
+                    backgroundColor: "#EFF6FF",
+                    borderWidth: 1.5,
+                    borderColor: "#BFDBFE",
                   }}
                 >
-                  Aprovar
+                  {generatingPdf ? (
+                    <ActivityIndicator size="small" color="#1565C0" />
+                  ) : (
+                    <Feather name="file-text" size={16} color="#1565C0" />
+                  )}
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#1565C0" }}>
+                    Gerar PDF
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => selectedBudget && handleShareWhatsApp(selectedBudget)}
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    paddingVertical: 12,
+                    borderRadius: 10,
+                    backgroundColor: "#F0FDF4",
+                    borderWidth: 1.5,
+                    borderColor: "#BBF7D0",
+                  }}
+                >
+                  <Feather name="message-circle" size={16} color="#16A34A" />
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#16A34A" }}>
+                    WhatsApp
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Valor */}
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                <Text
+                  style={{
+                    flex: 1,
+                    fontSize: 13,
+                    fontWeight: "500",
+                    fontFamily: "Inter_500Medium",
+                    color: colors.mutedForeground,
+                  }}
+                >
+                  Valor (R$)
                 </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Pressable>
+              </View>
+              <TextInput
+                value={valueInput}
+                onChangeText={setValueInput}
+                placeholder="Ex: 1500.00"
+                keyboardType="numeric"
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
+                style={{
+                  height: 48,
+                  borderWidth: 1.5,
+                  borderColor: colors.border,
+                  borderRadius: 10,
+                  paddingHorizontal: 12,
+                  marginBottom: 12,
+                  color: colors.foreground,
+                  fontFamily: "Inter_400Regular",
+                  fontSize: 15,
+                  backgroundColor: colors.muted,
+                }}
+                placeholderTextColor={colors.mutedForeground}
+              />
+
+              {/* Observações */}
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                <Text
+                  style={{
+                    flex: 1,
+                    fontSize: 13,
+                    fontWeight: "500",
+                    fontFamily: "Inter_500Medium",
+                    color: colors.mutedForeground,
+                  }}
+                >
+                  Observações
+                </Text>
+                <TouchableOpacity
+                  onPress={() => Keyboard.dismiss()}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    backgroundColor: colors.primary,
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Feather name="check" size={13} color="#ffffff" />
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#ffffff" }}>
+                    OK
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Detalhes do orçamento..."
+                multiline
+                numberOfLines={4}
+                blurOnSubmit={false}
+                style={{
+                  borderWidth: 1.5,
+                  borderColor: colors.border,
+                  borderRadius: 10,
+                  padding: 12,
+                  marginBottom: 20,
+                  color: colors.foreground,
+                  fontFamily: "Inter_400Regular",
+                  fontSize: 14,
+                  backgroundColor: colors.muted,
+                  minHeight: 90,
+                  textAlignVertical: "top",
+                }}
+                placeholderTextColor={colors.mutedForeground}
+              />
+
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => updateStatus("recusado")}
+                  style={{
+                    flex: 1,
+                    padding: 14,
+                    borderRadius: 10,
+                    backgroundColor: "#fee2e2",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#991b1b",
+                      fontFamily: "Inter_600SemiBold",
+                      fontSize: 14,
+                    }}
+                  >
+                    Recusar
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => updateStatus("aprovado")}
+                  style={{
+                    flex: 1,
+                    padding: 14,
+                    borderRadius: 10,
+                    backgroundColor: "#dcfce7",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#166534",
+                      fontFamily: "Inter_600SemiBold",
+                      fontSize: 14,
+                    }}
+                  >
+                    Aprovar
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
