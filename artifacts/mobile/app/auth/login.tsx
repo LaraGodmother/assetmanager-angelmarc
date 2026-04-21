@@ -249,7 +249,7 @@ export default function LoginScreen() {
               textAlign: "center",
             }}
           >
-            Demo admin: admin@servcontrol.com / admin123
+            Acesso admin: admin@angelmarc.com
           </Text>
         </View>
       </ScrollView>

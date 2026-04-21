@@ -272,6 +272,17 @@ export default function HomeScreen() {
       >
         <Feather name="message-circle" size={26} color="#ffffff" />
       </TouchableOpacity>
+
+      {/* Admin access link — always visible */}
+      <TouchableOpacity
+        onPress={() => router.push("/auth/login")}
+        style={{ position: "absolute", bottom: bottomInset + 6, left: 0, right: 0, alignItems: "center" }}
+        activeOpacity={0.6}
+      >
+        <Text style={{ fontSize: 11, color: colors.mutedForeground, fontFamily: "Inter_400Regular" }}>
+          Área Administrativa
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
