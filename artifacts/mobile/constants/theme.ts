@@ -11,7 +11,7 @@ export const BRAND = {
     tagline: "Tecnologia e Serviços Residenciais e Comerciais",
     cnpj: "65.591.897/0001-10",
     phone: "(11) 98520-6774",
-    whatsapp: "5511999999999",
+    whatsapp: "5511985206774",
     email: "grupoangelmarc@outlook.com.br",
     address: "",
   },
