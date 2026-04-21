@@ -141,6 +141,12 @@ export const api = {
 
   // Clients
   getClients: () => request<ApiUser[]>("/clients"),
+
+  updateClient: (id: number, data: Partial<{ name: string; phone: string; document: string; address: string }>) =>
+    request<ApiUser>(`/clients/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
 };
 
 // ─── API Types ────────────────────────────────────────────────────────────────
@@ -151,6 +157,8 @@ export interface ApiUser {
   email: string;
   role: "admin" | "client";
   phone?: string | null;
+  document?: string | null;
+  address?: string | null;
   createdAt: string;
 }
 
@@ -176,6 +184,7 @@ export interface ApiBudget {
   status: "pending" | "approved" | "rejected";
   createdAt: string;
   clientName?: string | null;
+  clientPhone?: string | null;
   serviceName?: string | null;
 }
 

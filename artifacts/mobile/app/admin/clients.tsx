@@ -42,7 +42,7 @@ export default function AdminClientsScreen() {
   const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", document: "", address: "", password: "" });
   const [saving, setSaving] = useState(false);
 
   const loadClients = useCallback(async () => {
@@ -75,13 +75,19 @@ export default function AdminClientsScreen() {
     }
     setSaving(true);
     try {
-      await api.register(
+      const created = await api.register(
         form.name.trim(),
         form.email.trim().toLowerCase(),
         form.password,
         form.phone.trim() || undefined
       );
-      setForm({ name: "", email: "", phone: "", password: "" });
+      if ((form.document.trim() || form.address.trim()) && created?.user?.id) {
+        await api.updateClient(created.user.id, {
+          document: form.document.trim() || undefined,
+          address: form.address.trim() || undefined,
+        });
+      }
+      setForm({ name: "", email: "", phone: "", document: "", address: "", password: "" });
       setShowModal(false);
       await loadClients();
     } catch (e: any) {
@@ -237,6 +243,14 @@ export default function AdminClientsScreen() {
                       </Text>
                     </View>
                   ) : null}
+                  {c.document ? (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <Feather name="credit-card" size={11} color={colors.mutedForeground} />
+                      <Text style={{ fontSize: 12, color: colors.mutedForeground, fontFamily: "Inter_400Regular" }}>
+                        {c.document}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
                 {/* Data */}
                 <View style={{ alignItems: "flex-end" }}>
@@ -274,6 +288,8 @@ export default function AdminClientsScreen() {
                   { field: "name" as const, label: "Nome completo *", placeholder: "Ex: João da Silva", keyboard: "default" as const },
                   { field: "email" as const, label: "E-mail *", placeholder: "joao@email.com", keyboard: "email-address" as const },
                   { field: "phone" as const, label: "Telefone / WhatsApp", placeholder: "(11) 99999-9999", keyboard: "phone-pad" as const },
+                  { field: "document" as const, label: "CPF / CNPJ", placeholder: "000.000.000-00", keyboard: "default" as const },
+                  { field: "address" as const, label: "Endereço", placeholder: "Rua, número, bairro, cidade", keyboard: "default" as const },
                   { field: "password" as const, label: "Senha de acesso *", placeholder: "Mínimo 6 caracteres", keyboard: "default" as const },
                 ].map(({ field, label, placeholder, keyboard }) => (
                   <View key={field}>

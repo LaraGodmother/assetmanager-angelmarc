@@ -18,6 +18,7 @@ const budgetWithDetails = async (clientId?: number) => {
       status: budgetsTable.status,
       createdAt: budgetsTable.createdAt,
       clientName: usersTable.name,
+      clientPhone: usersTable.phone,
       serviceName: servicesTable.name,
     })
     .from(budgetsTable)

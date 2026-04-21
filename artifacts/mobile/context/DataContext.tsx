@@ -51,6 +51,7 @@ export interface Budget {
   id: string;
   clientId: string;
   clientName: string;
+  clientPhone?: string;
   serviceType: string;
   serviceId: string;
   description: string;
@@ -164,6 +165,7 @@ function mapBudget(b: ApiBudget): Budget {
     id: String(b.id),
     clientId: String(b.clientId),
     clientName: b.clientName ?? "Cliente",
+    clientPhone: b.clientPhone ?? undefined,
     serviceType: b.serviceName ?? "Serviço",
     serviceId: String(b.serviceId),
     description: b.observations ?? "",

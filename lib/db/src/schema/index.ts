@@ -40,6 +40,8 @@ export const usersTable = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: userRoleEnum("role").notNull().default("client"),
   phone: text("phone"),
+  document: text("document"),
+  address: text("address"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

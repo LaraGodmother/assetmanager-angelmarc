@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -18,6 +19,14 @@ import { useColors } from "@/hooks/useColors";
 import { useData, BudgetStatus, Budget } from "@/context/DataContext";
 import { BudgetCard } from "@/components/BudgetCard";
 import { Card } from "@/components/ui/Card";
+
+const API_BASE =
+  process.env.EXPO_PUBLIC_API_URL ||
+  "https://0c4f309c-6b3c-4e2f-96e4-8aadfecef50e-00-3gjzlqu4remhq.picard.replit.dev/api";
+
+function buildPdfUrl(budgetId: string) {
+  return API_BASE.replace(/\/api$/, "") + "/api/orcamentos/" + budgetId + "/pdf";
+}
 
 const FILTER_OPTIONS = ["Todos", "aguardando", "aprovado", "recusado"];
 const FILTER_LABELS: Record<string, string> = {
@@ -39,6 +48,7 @@ export default function AdminBudgetsScreen() {
   const [valueInput, setValueInput] = useState("");
   const [notes, setNotes] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   async function handleExport() {
     setExporting(true);
@@ -47,6 +57,28 @@ export default function AdminBudgetsScreen() {
     } finally {
       setExporting(false);
     }
+  }
+
+  async function handleGeneratePdf(budget: Budget) {
+    setGeneratingPdf(true);
+    try {
+      const url = buildPdfUrl(budget.id);
+      await Linking.openURL(url);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  }
+
+  async function handleShareWhatsApp(budget: Budget) {
+    const pdfUrl = buildPdfUrl(budget.id);
+    const msg = encodeURIComponent(
+      `Olá ${budget.clientName}! Segue o orçamento Nº ${budget.id.padStart(4, "0")} da Grupo Angelmarc Service & System.\n\nAcesse para visualizar:\n${pdfUrl}`
+    );
+    const phone = budget.clientPhone?.replace(/\D/g, "");
+    const waUrl = phone
+      ? `https://wa.me/55${phone}?text=${msg}`
+      : `https://wa.me/?text=${msg}`;
+    await Linking.openURL(waUrl);
   }
 
   const filtered = budgets
@@ -214,11 +246,61 @@ export default function AdminBudgetsScreen() {
                 color: colors.foreground,
                 fontFamily: "Inter_400Regular",
                 lineHeight: 18,
-                marginBottom: 16,
+                marginBottom: 14,
               }}
             >
               {selectedBudget?.description}
             </Text>
+
+            {/* PDF + WhatsApp row */}
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 18 }}>
+              <TouchableOpacity
+                onPress={() => selectedBudget && handleGeneratePdf(selectedBudget)}
+                disabled={generatingPdf}
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  paddingVertical: 12,
+                  borderRadius: 10,
+                  backgroundColor: "#EFF6FF",
+                  borderWidth: 1.5,
+                  borderColor: "#BFDBFE",
+                }}
+              >
+                {generatingPdf ? (
+                  <ActivityIndicator size="small" color="#1565C0" />
+                ) : (
+                  <Feather name="file-text" size={16} color="#1565C0" />
+                )}
+                <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#1565C0" }}>
+                  Gerar PDF
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => selectedBudget && handleShareWhatsApp(selectedBudget)}
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  paddingVertical: 12,
+                  borderRadius: 10,
+                  backgroundColor: "#F0FDF4",
+                  borderWidth: 1.5,
+                  borderColor: "#BBF7D0",
+                }}
+              >
+                <Feather name="message-circle" size={16} color="#16A34A" />
+                <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#16A34A" }}>
+                  WhatsApp
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             <Text
               style={{
