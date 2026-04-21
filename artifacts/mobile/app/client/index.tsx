@@ -103,7 +103,7 @@ export default function ClientDashboard() {
             </View>
           </View>
         </View>
-        <TouchableOpacity onPress={() => logout()} style={styles.logoutBtn}>
+        <TouchableOpacity onPress={async () => { await logout(); router.replace("/auth/login"); }} style={styles.logoutBtn}>
           <Feather name="log-out" size={20} color="#1565C0" />
         </TouchableOpacity>
       </View>

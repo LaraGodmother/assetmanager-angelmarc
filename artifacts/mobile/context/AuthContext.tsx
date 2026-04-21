@@ -23,7 +23,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; role?: UserRole; error?: string }>;
   register: (
     name: string,
     email: string,
@@ -65,13 +65,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    async (email: string, password: string): Promise<{ success: boolean; role?: UserRole; error?: string }> => {
       try {
         const { user: apiUser } = await api.login(email, password);
         const u = apiUserToUser(apiUser);
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(u));
         setUser(u);
-        return { success: true };
+        return { success: true, role: u.role };
       } catch (err: any) {
         return { success: false, error: err?.message ?? "Erro ao fazer login." };
       }

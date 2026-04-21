@@ -15,6 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { useData } from "@/context/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
@@ -24,6 +25,7 @@ export default function LoginScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
+  const { refreshData } = useData();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,7 +46,8 @@ export default function LoginScreen() {
       const result = await login(email.trim().toLowerCase(), password);
       if (result.success) {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace("/");
+        refreshData().catch(() => {});
+        router.replace(result.role === "admin" ? "/admin" : "/client");
       } else {
         setError(result.error ?? "Erro ao entrar.");
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
