@@ -1,10 +1,10 @@
 /**
- * Production server for Expo web build.
+ * Production server for Expo web build + API proxy.
  *
- * Serves the output of `expo export --platform web` (dist/) as a SPA:
- * - Static files from dist/ are served directly
- * - All other routes fall back to dist/index.html (SPA routing)
- * - /manifest with expo-platform header → native manifest JSON (for Expo Go)
+ * - GET /api/* → proxied to API server on localhost:8080
+ * - Static files from dist/ → served directly
+ * - All other routes → dist/index.html (SPA routing)
+ * - /manifest with expo-platform header → native manifest JSON (Expo Go)
  *
  * Zero external dependencies — uses only Node.js built-ins.
  */
@@ -16,6 +16,7 @@ const path = require("path");
 const WEB_ROOT = path.resolve(__dirname, "..", "dist");
 const NATIVE_ROOT = path.resolve(__dirname, "..", "static-build");
 const INDEX_HTML = path.join(WEB_ROOT, "index.html");
+const API_PORT = parseInt(process.env.API_PORT || "8080", 10);
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -35,6 +36,29 @@ const MIME_TYPES = {
   ".otf": "font/otf",
   ".map": "application/json",
 };
+
+function proxyToApi(req, res) {
+  const options = {
+    hostname: "localhost",
+    port: API_PORT,
+    path: req.url,
+    method: req.method,
+    headers: { ...req.headers, host: `localhost:${API_PORT}` },
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res, { end: true });
+  });
+
+  proxyReq.on("error", (err) => {
+    console.error("API proxy error:", err.message);
+    res.writeHead(502, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: "API unavailable", details: err.message }));
+  });
+
+  req.pipe(proxyReq, { end: true });
+}
 
 function serveFile(filePath, res) {
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
@@ -67,7 +91,7 @@ function serveManifest(platform, res) {
 function serveIndex(res) {
   if (!fs.existsSync(INDEX_HTML)) {
     res.writeHead(503, { "content-type": "text/html; charset=utf-8" });
-    res.end("<h1>App not built yet</h1><p>Run: pnpm --filter @workspace/mobile run build:web</p>");
+    res.end("<h1>App não iniciado</h1><p>Execute: pnpm --filter @workspace/mobile run build:web</p>");
     return;
   }
   const content = fs.readFileSync(INDEX_HTML);
@@ -79,15 +103,20 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host}`);
   const pathname = url.pathname;
 
+  // Proxy all /api/* requests to the API server
+  if (pathname.startsWith("/api")) {
+    return proxyToApi(req, res);
+  }
+
   // Native manifest endpoint (Expo Go support)
-  if (pathname === "/manifest" || pathname === "/") {
+  if (pathname === "/manifest") {
     const platform = req.headers["expo-platform"];
     if (platform === "ios" || platform === "android") {
       return serveManifest(platform, res);
     }
   }
 
-  // Try to serve exact static file from dist/
+  // Serve exact static file from dist/
   const safePath = path.normalize(pathname).replace(/^(\.\.(\/|\\|$))+/, "");
   const filePath = path.join(WEB_ROOT, safePath);
 
@@ -102,7 +131,8 @@ const server = http.createServer((req, res) => {
 
 const port = parseInt(process.env.PORT || "18115", 10);
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Serving static Expo build on port ${port}`);
+  console.log(`Serving Expo web build on port ${port}`);
+  console.log(`API proxy → localhost:${API_PORT}`);
   console.log(`Web root: ${WEB_ROOT}`);
   console.log(`Index exists: ${fs.existsSync(INDEX_HTML)}`);
 });
